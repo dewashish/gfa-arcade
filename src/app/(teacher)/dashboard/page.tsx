@@ -106,6 +106,34 @@ export default async function DashboardPage() {
       ? templateList[Math.floor(Math.random() * templateList.length)]
       : null;
 
+  // Top scorer across recent sessions
+  let topScorer: { name: string; score: number; activity: string } | null = null;
+  if (recentSessionsRaw.length > 0) {
+    const sessionIds = recentSessionsRaw.map((s) => s.id);
+    const { data: highest } = await supabase
+      .from("game_scores")
+      .select("score, students(name), game_sessions(activities(title))")
+      .in("session_id", sessionIds)
+      .order("score", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (highest) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const studentName = (highest as any).students?.name ?? "Student";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activityTitle =
+        (highest as any).game_sessions?.activities?.title ?? "a game";
+      topScorer = {
+        name: studentName,
+        score: highest.score ?? 0,
+        activity: activityTitle,
+      };
+    }
+  }
+
+  // Engagement % — proportion of last 5 sessions vs target of 5
+  const engagementPct = Math.min(100, Math.round(((recentSessionsRaw?.length ?? 0) / 5) * 100));
+
   return (
     <DashboardClient
       teacherFirstName={firstName}
@@ -114,6 +142,8 @@ export default async function DashboardPage() {
       totalSessions={totalSessions}
       totalStudents={totalStudents}
       todaysPick={todaysPick}
+      engagementPct={engagementPct}
+      topScorer={topScorer}
     />
   );
 }

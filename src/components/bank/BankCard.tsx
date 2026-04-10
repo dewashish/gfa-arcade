@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { SUBJECT_IMAGES, SUBJECT_META, type SubjectKey } from "@/lib/bank/imagery";
+import { SUBJECT_META, getActivityImage, type SubjectKey } from "@/lib/bank/imagery";
 import { GAME_TYPE_LABELS, countActivityItems, type BankActivity } from "@/lib/bank/types";
 import { SPRING } from "@/lib/design/motion";
 
@@ -20,7 +20,7 @@ export function BankCard({ activity, index, onPreview, onUse, isLaunching }: Ban
 
   const subjectKey = (activity.subject ?? "maths") as SubjectKey;
   const meta = SUBJECT_META[subjectKey] ?? SUBJECT_META.maths;
-  const image = SUBJECT_IMAGES[subjectKey] ?? SUBJECT_IMAGES.maths;
+  const image = getActivityImage(activity);
   const gameInfo = GAME_TYPE_LABELS[activity.game_type] ?? { label: activity.game_type, emoji: "🎮" };
   const itemCount = countActivityItems(activity.config_json);
 

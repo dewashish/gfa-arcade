@@ -72,11 +72,19 @@ export function BankClient({ templates, fetchError }: Props) {
       const session = await createGameSession(supabase, activity.id);
       router.push(`/session/${session.id}`);
     } catch (e) {
-      setLaunchError(
-        e instanceof Error
-          ? e.message
-          : "Something went wrong starting your game. Please try again."
-      );
+      // Surface the real error so RLS / DB issues are visible.
+      // Per ui-ux-pro-max error-clarity rule: include cause + how to fix.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = e as any;
+      const message =
+        err?.message ??
+        (typeof e === "string" ? e : "Couldn't start the game.");
+      const code = err?.code ? ` (code: ${err.code})` : "";
+      const hint = err?.hint ? ` Hint: ${err.hint}` : "";
+      const fullMessage = `${message}${code}${hint}`;
+
+      console.error("[bank] createGameSession failed", e);
+      setLaunchError(fullMessage);
       setLaunchingId(null);
     }
   }

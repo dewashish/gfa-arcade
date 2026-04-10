@@ -57,6 +57,50 @@ create index if not exists activities_template_subject_idx
   on public.activities (is_template, subject)
   where is_template = true;
 
+-- 6. RLS: teachers can create sessions pointing at templates
+--    The original "Teachers can insert sessions" policy requires
+--    activities.teacher_id = auth.uid() which blocks template sessions
+--    (templates have teacher_id IS NULL). This adds a parallel policy
+--    that allows insert when the activity is a template.
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'game_sessions'
+      and policyname = 'Authenticated users can launch template sessions'
+  ) then
+    create policy "Authenticated users can launch template sessions"
+      on public.game_sessions for insert
+      with check (
+        exists (
+          select 1 from public.activities a
+          where a.id = game_sessions.activity_id and a.is_template = true
+        )
+      );
+  end if;
+end $$;
+
+-- 7. RLS: teachers can update template sessions they launched
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'game_sessions'
+      and policyname = 'Authenticated users can update template sessions'
+  ) then
+    create policy "Authenticated users can update template sessions"
+      on public.game_sessions for update
+      using (
+        exists (
+          select 1 from public.activities a
+          where a.id = game_sessions.activity_id and a.is_template = true
+        )
+      );
+  end if;
+end $$;
+
 -- 6. Allow anonymous to read sessions for a template (so the existing
 --    leaderboard route works when a teacher launches a template session)
 --    The existing "Anyone can view session by PIN" already covers this.

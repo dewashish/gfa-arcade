@@ -13,6 +13,7 @@ import { SpinWheel } from "@/components/games/SpinWheel";
 import { Quiz } from "@/components/games/Quiz";
 import { LiveLeaderboard } from "@/components/shared/LiveLeaderboard";
 import { CelebrationOverlay } from "@/components/shared/CelebrationOverlay";
+import { SimulateClassButton } from "@/components/dev/SimulateClassButton";
 import type {
   ActivityConfig,
   SpinWheelConfig,
@@ -33,6 +34,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [activityTitle, setActivityTitle] = useState("");
   const [presentMode, setPresentMode] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [leaderboardView, setLeaderboardView] = useState<"podium" | "list">("podium");
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
 
@@ -252,21 +254,11 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           )}
         </main>
 
-        {/* Bottom: top 3 mini leaderboard */}
-        {top3.length > 0 && (
-          <footer className="px-8 py-4 bg-white/70 backdrop-blur-xl">
-            <div className="flex items-center justify-center gap-6">
-              {top3.map((entry, idx) => (
-                <div key={entry.student_id} className="flex items-center gap-3">
-                  <span className="text-2xl">{["🥇", "🥈", "🥉"][idx]}</span>
-                  <div>
-                    <p className="font-headline font-bold text-sm">{entry.student_name}</p>
-                    <p className="text-xs text-primary font-black">
-                      {entry.total_score.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
+        {/* Bottom: full podium leaderboard (replaces previous mini list) */}
+        {store.leaderboard.length > 0 && (
+          <footer className="px-8 py-6 bg-white/70 backdrop-blur-xl border-t border-outline-variant/15 max-h-[40vh] overflow-y-auto">
+            <div className="max-w-5xl mx-auto">
+              <LiveLeaderboard variant="full" />
             </div>
           </footer>
         )}
@@ -318,7 +310,8 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-start">
+          <SimulateClassButton sessionId={sessionId} />
           {store.phase === "waiting" && (
             <motion.button
               whileHover={{ scale: participants > 0 ? 1.05 : 1 }}
@@ -430,8 +423,37 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
+          className="space-y-3"
         >
-          <LiveLeaderboard variant="compact" />
+          {/* View toggle */}
+          <div
+            role="radiogroup"
+            aria-label="Leaderboard view"
+            className="flex bg-surface-container-low rounded-full p-1 ambient-shadow"
+          >
+            {[
+              { key: "podium", label: "🏆 Podium" },
+              { key: "list", label: "📋 List" },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                role="radio"
+                aria-checked={leaderboardView === opt.key}
+                onClick={() => setLeaderboardView(opt.key as "podium" | "list")}
+                className={`focus-ring flex-1 h-10 rounded-full font-headline font-bold text-sm transition-colors ${
+                  leaderboardView === opt.key
+                    ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-md"
+                    : "text-on-surface-variant hover:text-primary"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow max-h-[75vh] overflow-y-auto">
+            <LiveLeaderboard variant={leaderboardView === "podium" ? "full" : "compact"} />
+          </div>
         </motion.div>
       </div>
 

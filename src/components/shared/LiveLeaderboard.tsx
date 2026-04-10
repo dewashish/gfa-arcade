@@ -18,18 +18,18 @@ export function LiveLeaderboard({ variant = "compact" }: LiveLeaderboardProps) {
 
   if (variant === "full") {
     return (
-      <section className="space-y-8">
-        <div className="flex justify-between items-end">
-          <div>
+      <section className="space-y-6 @container">
+        <div className="flex justify-between items-end gap-3">
+          <div className="min-w-0">
             <motion.h1
               initial={{ opacity: 0, y: 20, rotate: 0 }}
               animate={{ opacity: 1, y: 0, rotate: -1 }}
               transition={{ type: "spring", stiffness: 220 }}
-              className="font-headline font-black text-4xl md:text-5xl text-primary origin-left"
+              className="font-headline font-black text-2xl @md:text-4xl @lg:text-5xl text-primary origin-left"
             >
               Live Leaderboard
             </motion.h1>
-            <p className="text-on-surface-variant mt-2 flex items-center gap-2 font-body">
+            <p className="text-on-surface-variant mt-2 flex items-center gap-2 font-body text-sm @md:text-base">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-container opacity-75" />
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-tertiary" />
@@ -37,7 +37,7 @@ export function LiveLeaderboard({ variant = "compact" }: LiveLeaderboardProps) {
               {leaderboard.length} student{leaderboard.length === 1 ? "" : "s"} active
             </p>
           </div>
-          <div className="hidden lg:flex gap-2">
+          <div className="hidden @xl:flex gap-2">
             <div className="px-4 py-2 bg-surface-container-high rounded-full font-bold text-sm">
               Real-time Sync
             </div>
@@ -45,7 +45,7 @@ export function LiveLeaderboard({ variant = "compact" }: LiveLeaderboardProps) {
         </div>
 
         {leaderboard.length === 0 ? (
-          <div className="text-center py-16 text-on-surface-variant font-body">
+          <div className="text-center py-12 text-on-surface-variant font-body">
             <div className="text-6xl mb-4">⏳</div>
             <p className="text-lg">Waiting for players to join...</p>
           </div>
@@ -53,7 +53,7 @@ export function LiveLeaderboard({ variant = "compact" }: LiveLeaderboardProps) {
           <>
             {/* Top 3 Podium — order: 2nd, 1st, 3rd */}
             {top3.length > 0 && (
-              <div className="grid grid-cols-3 gap-4 md:gap-8 mb-12 items-end">
+              <div className="grid grid-cols-3 gap-2 @md:gap-4 @lg:gap-8 mb-8 @md:mb-12 items-end">
                 {top3[1] ? (
                   <PodiumCard entry={top3[1]} rank={2} highlight={top3[1].student_id === studentId} />
                 ) : (

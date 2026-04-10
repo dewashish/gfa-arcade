@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { KineticHeadline } from "@/components/ui/KineticHeadline";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StatBar } from "@/components/reports/StatBar";
 import { SessionRow } from "@/components/reports/SessionRow";
-import { STAGGER, SPRING } from "@/lib/design/motion";
+import { EMPTY_STATE_IMAGES } from "@/lib/bank/imagery";
+import { STAGGER } from "@/lib/design/motion";
 import type { ReportSession, ReportActivityStat } from "./page";
 
 interface Props {
@@ -19,13 +21,21 @@ interface Props {
 export function ReportsClient({ sessions, totalSessions, totalStudents, activityStats }: Props) {
   // Empty state for new teachers
   if (sessions.length === 0) {
+    const img = EMPTY_STATE_IMAGES.reports;
     return (
       <div className="space-y-6">
         <KineticHeadline as="h1" size="lg" tone="on-surface" rotate={-1}>
           Reports
         </KineticHeadline>
         <div className="bg-surface-container-low rounded-xl p-12 text-center">
-          <div className="text-7xl mb-4" aria-hidden="true">📊</div>
+          <Image
+            src={img.url}
+            alt={img.alt}
+            width={img.width}
+            height={img.height}
+            className="w-48 h-48 mx-auto mb-6 object-contain drop-shadow-lg"
+            priority
+          />
           <p className="font-headline font-bold text-2xl text-on-surface mb-2">
             No sessions yet
           </p>

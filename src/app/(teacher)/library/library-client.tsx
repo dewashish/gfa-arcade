@@ -2,12 +2,14 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { createGameSession } from "@/lib/game-engine/session-manager";
 import { KineticHeadline } from "@/components/ui/KineticHeadline";
 import { GAME_TYPE_LABELS } from "@/lib/bank/types";
+import { EMPTY_STATE_IMAGES } from "@/lib/bank/imagery";
 import { STAGGER, SPRING } from "@/lib/design/motion";
 import type { Database } from "@/lib/supabase/types";
 
@@ -64,13 +66,21 @@ export function LibraryClient({ activities }: Props) {
 
   // Empty state
   if (activities.length === 0) {
+    const img = EMPTY_STATE_IMAGES.library;
     return (
       <div className="space-y-6">
         <KineticHeadline as="h1" size="lg" tone="on-surface" rotate={-1}>
           My Library
         </KineticHeadline>
         <div className="bg-surface-container-low rounded-xl p-12 text-center">
-          <div className="text-7xl mb-4" aria-hidden="true">📚</div>
+          <Image
+            src={img.url}
+            alt={img.alt}
+            width={img.width}
+            height={img.height}
+            className="w-48 h-48 mx-auto mb-6 object-contain drop-shadow-lg"
+            priority
+          />
           <p className="font-headline font-bold text-2xl text-on-surface mb-2">
             Your library is empty
           </p>
