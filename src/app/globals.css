@@ -187,3 +187,83 @@ body {
 .ambient-shadow-lg {
   box-shadow: 0 30px 60px rgba(0, 98, 158, 0.12);
 }
+
+/* ===== Accessibility helpers (ui-ux-pro-max) ===== */
+
+/*
+ * Visible 2-3px focus ring for keyboard nav.
+ * Apply via `class="focus-ring"` on any interactive element.
+ * Uses :focus-visible so mouse clicks don't trigger the ring.
+ */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 3px solid var(--primary-container);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * Skip-to-content link for screen reader / keyboard users.
+ * Hidden by default, becomes visible on focus.
+ * Place at the top of the body before any nav.
+ */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  z-index: 100;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/*
+ * Honor prefers-reduced-motion at the CSS level too.
+ * Framer Motion is wrapped by ReducedMotionProvider; this catches
+ * native CSS animations like .shimmer-bar and .bounce-in.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-bar {
+    animation: none;
+  }
+  .bounce-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .kinetic-float {
+    transition: none;
+  }
+  .kinetic-float:hover {
+    transform: none;
+  }
+  .bouncy-tap {
+    transition: none;
+  }
+}
+
+/*
+ * COLOR CONTRAST RULES — DO NOT VIOLATE
+ *
+ * Per WCAG AA + ui-ux-pro-max color-contrast rule (4.5:1 for body text):
+ *   - var(--secondary-container) #feb700 on white = ~1.6:1 — FAILS
+ *     → Use only as a BACKGROUND with on-secondary-container (#6b4b00) text
+ *     → Never use as a text color on a light surface
+ *   - var(--tertiary-container) #00a396 on white = ~3.0:1 — fails AA body but OK for large/UI text ≥18px bold
+ *     → OK for big numbers and headlines, NOT for paragraph copy
+ *   - var(--primary) #00629e on white = ~6.4:1 — PASSES AA ✓
+ *   - var(--primary-container) #2e97e6 on white = ~3.5:1 — large text only
+ *   - var(--tertiary) #006a61 on white = ~6.2:1 — PASSES AA ✓
+ *   - var(--on-surface) #1b1c1c on white = ~16.6:1 — PASSES AAA ✓
+ *
+ * If a chip uses gold as background, set text to var(--on-secondary-container) (#6b4b00).
+ * If you need a "gold" text color on white, use var(--secondary) (#7c5800) instead — passes AA at ~6.0:1.
+ */

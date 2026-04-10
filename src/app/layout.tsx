@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Lexend } from "next/font/google";
 import "./globals.css";
+import { ReducedMotionProvider } from "@/components/shared/ReducedMotionProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-headline",
@@ -44,7 +45,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-on-surface font-body">
-        {children}
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+        <ReducedMotionProvider>{children}</ReducedMotionProvider>
       </body>
     </html>
   );

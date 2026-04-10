@@ -1,402 +1,429 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import type { Database } from "@/lib/supabase/types";
-import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { createClient } from "@/lib/supabase/client";
+import { createGameSession } from "@/lib/game-engine/session-manager";
 import { KineticHeadline } from "@/components/ui/KineticHeadline";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { SUBJECT_IMAGES, SUBJECT_META, type SubjectKey } from "@/lib/bank/imagery";
+import {
+  GAME_TYPE_LABELS,
+  countActivityItems,
+  type BankActivity,
+} from "@/lib/bank/types";
+import { STAGGER, SPRING } from "@/lib/design/motion";
+import type { Database } from "@/lib/supabase/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
 
-interface GameTypeInfo {
-  icon: string;
-  color: string;
-  badge: string;
-  badgeColor: string;
-  emoji: string;
+const GAME_TYPE_COLOR: Record<string, string> = {
+  quiz: "#FFB800",
+  "spin-wheel": "#2E97E6",
+  "match-up": "#00A396",
+  flashcards: "#FF8A80",
+  "speaking-cards": "#E040FB",
+  "group-sort": "#7C5800",
+  "complete-sentence": "#00629E",
+};
+
+interface RecentSession {
+  id: string;
+  title: string;
+  startedAt: string;
+  participants: number;
+  topScorer: { name: string; avatarId: string; score: number } | null;
 }
-
-const GAME_TYPE_INFO: Record<string, GameTypeInfo> = {
-  "spin-wheel": {
-    icon: "casino",
-    color: "#2E97E6",
-    badge: "Numeracy",
-    badgeColor: "text-tertiary",
-    emoji: "🎡",
-  },
-  "match-up": {
-    icon: "compare_arrows",
-    color: "#00A396",
-    badge: "Literacy",
-    badgeColor: "text-primary",
-    emoji: "🔤",
-  },
-  quiz: {
-    icon: "quiz",
-    color: "#FFB800",
-    badge: "Quiz",
-    badgeColor: "text-secondary",
-    emoji: "❓",
-  },
-  flashcards: {
-    icon: "style",
-    color: "#FF8A80",
-    badge: "Memory",
-    badgeColor: "text-orange-500",
-    emoji: "🃏",
-  },
-  "speaking-cards": {
-    icon: "record_voice_over",
-    color: "#E040FB",
-    badge: "Speaking",
-    badgeColor: "text-purple-500",
-    emoji: "🎤",
-  },
-  "complete-sentence": {
-    icon: "text_fields",
-    color: "#00629E",
-    badge: "Grammar",
-    badgeColor: "text-primary",
-    emoji: "📝",
-  },
-  "group-sort": {
-    icon: "category",
-    color: "#7C5800",
-    badge: "Sorting",
-    badgeColor: "text-secondary",
-    emoji: "🗂️",
-  },
-};
-
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 24 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 280, damping: 22 },
-  },
-};
 
 interface Props {
   teacherFirstName: string;
-  activities: Activity[];
-  sharedActivities: Activity[];
+  recentActivities: Activity[];
+  recentSessions: RecentSession[];
   totalSessions: number;
   totalStudents: number;
-  engagementPct: number;
-  topScorer: { name: string; score: number; activity: string } | null;
+  todaysPick: BankActivity | null;
 }
+
+const AVATAR_EMOJI: Record<string, string> = {
+  cat: "🐱", dog: "🐶", penguin: "🐧", bunny: "🐰", bear: "🐻", owl: "🦉",
+  fox: "🦊", panda: "🐼", lion: "🦁", unicorn: "🦄", dragon: "🐉",
+  robot: "🤖", astronaut: "🧑‍🚀", superhero: "🦸", star: "⭐", rocket: "🚀",
+};
 
 export function DashboardClient({
   teacherFirstName,
-  activities,
-  sharedActivities,
+  recentActivities,
+  recentSessions,
   totalSessions,
   totalStudents,
-  engagementPct,
-  topScorer,
+  todaysPick,
 }: Props) {
-  const featuredActivity = activities[0];
-  const featuredInfo = featuredActivity
-    ? (GAME_TYPE_INFO[featuredActivity.game_type] ?? GAME_TYPE_INFO.quiz)
+  const router = useRouter();
+  const [launchingId, setLaunchingId] = useState<string | null>(null);
+
+  async function handleUseTemplate(activityId: string) {
+    setLaunchingId(activityId);
+    try {
+      const supabase = createClient();
+      const session = await createGameSession(supabase, activityId);
+      router.push(`/session/${session.id}`);
+    } catch (e) {
+      console.error(e);
+      setLaunchingId(null);
+    }
+  }
+
+  const pickSubject = (todaysPick?.subject ?? "maths") as SubjectKey;
+  const pickMeta = SUBJECT_META[pickSubject] ?? SUBJECT_META.maths;
+  const pickImage = SUBJECT_IMAGES[pickSubject] ?? SUBJECT_IMAGES.maths;
+  const pickGameInfo = todaysPick
+    ? GAME_TYPE_LABELS[todaysPick.game_type] ?? { label: todaysPick.game_type, emoji: "🎮" }
     : null;
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-12">
-      {/* ===== Hero / Welcome Section ===== */}
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={{
+        hidden: { opacity: 0 },
+        show: {
+          opacity: 1,
+          transition: { staggerChildren: STAGGER.base, delayChildren: 0.05 },
+        },
+      }}
+      className="space-y-10"
+    >
+      {/* ===== Hero ===== */}
       <motion.section
-        variants={item}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-container p-8 md:p-12 text-white flex flex-col md:flex-row justify-between items-center gap-8 shadow-[0_30px_60px_rgba(0,98,158,0.18)]"
+        variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-container p-8 md:p-12 text-white"
       >
-        {/* Decorative blobs */}
+        {/* Decorative floating shapes */}
+        <motion.div
+          aria-hidden="true"
+          animate={{ y: [0, -15, 0] }}
+          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+          className="absolute top-6 right-8 text-5xl opacity-30"
+        >
+          ⭐
+        </motion.div>
+        <motion.div
+          aria-hidden="true"
+          animate={{ y: [0, 12, 0] }}
+          transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-6 right-32 text-4xl opacity-25"
+        >
+          🚀
+        </motion.div>
+        <motion.div
+          aria-hidden="true"
+          animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 2 }}
+          className="absolute top-1/2 right-60 text-4xl opacity-25 hidden md:block"
+        >
+          🎈
+        </motion.div>
         <div className="absolute -top-20 -right-10 w-72 h-72 bg-secondary-container/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-10 w-72 h-72 bg-tertiary-container/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4 max-w-lg">
-          <motion.h2
+        <div className="relative z-10 max-w-2xl">
+          <p className="text-sky-100 text-sm uppercase tracking-widest font-bold mb-2">
+            Welcome back
+          </p>
+          <motion.h1
             initial={{ opacity: 0, y: 20, rotate: 0 }}
             animate={{ opacity: 1, y: 0, rotate: -1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 18 }}
+            transition={SPRING.snappy}
             className="text-4xl md:text-5xl font-black font-headline leading-tight origin-left"
           >
-            Ready for today&apos;s adventure, {teacherFirstName}?
-          </motion.h2>
-          <p className="text-sky-100 text-lg font-body">
-            {featuredActivity
-              ? `Your students are waiting for "${featuredActivity.title}".`
-              : "Create your first game to get started."}
+            Hey {teacherFirstName}! Ready for an adventure?
+          </motion.h1>
+          <p className="text-sky-100 text-lg font-body mt-3">
+            Pick a ready-made activity from the Bank, or open one you&apos;ve built.
           </p>
-          <div className="flex gap-3 pt-4 flex-wrap">
-            {featuredActivity ? (
-              <Link href={`/create/${featuredActivity.game_type}?play=${featuredActivity.id}`}>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-3 bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-xl flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined">play_arrow</span>
-                  Quick Start Class
-                </motion.button>
-              </Link>
-            ) : (
-              <Link href="/create">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-3 bg-secondary-container text-on-secondary-container rounded-full font-bold shadow-xl flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined">add_circle</span>
-                  Create First Activity
-                </motion.button>
-              </Link>
-            )}
-            <Link href="/create">
-              <motion.button
+
+          <div className="flex gap-3 pt-5 flex-wrap">
+            <Link href="/bank">
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-3 bg-white/15 backdrop-blur-md text-white border border-white/30 rounded-full font-bold"
+                className="px-7 h-12 rounded-full bg-secondary-container text-on-secondary-container font-headline font-black shadow-xl flex items-center gap-2"
               >
-                View Lesson Plans
-              </motion.button>
+                <span className="material-symbols-outlined" aria-hidden="true">
+                  backpack
+                </span>
+                Browse Activity Bank
+              </motion.div>
             </Link>
-          </div>
-        </div>
-
-        <div className="relative w-full md:w-1/3 aspect-video rounded-lg overflow-hidden shadow-2xl rotate-2 bg-white/10 flex items-center justify-center text-7xl">
-          {featuredInfo?.emoji ?? "🎮"}
-        </div>
-      </motion.section>
-
-      {/* ===== Bento Stats Grid ===== */}
-      <motion.section
-        variants={item}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
-      >
-        {/* Class Engagement (large) */}
-        <div className="md:col-span-2 bg-surface-container-lowest rounded-xl p-8 flex flex-col justify-between ambient-shadow kinetic-float">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
-                Class Engagement
-              </p>
-              <h3 className="text-5xl font-black text-primary font-headline mt-1">
-                <AnimatedNumber value={engagementPct} format={(n) => `${Math.round(n)}%`} />
-              </h3>
-            </div>
-            <span className="material-symbols-outlined text-tertiary text-4xl">
-              trending_up
-            </span>
-          </div>
-          <div className="mt-6 w-full bg-surface-container-highest h-4 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${engagementPct}%` }}
-              transition={{ duration: 1.4, ease: [0.34, 1.56, 0.64, 1], delay: 0.3 }}
-              className="shimmer-bar h-full"
-            />
-          </div>
-          <p className="text-xs text-on-surface-variant mt-4 font-medium">
-            {totalSessions} session{totalSessions === 1 ? "" : "s"} played recently · {totalStudents} student
-            {totalStudents === 1 ? "" : "s"} engaged
-          </p>
-        </div>
-
-        {/* Top Scorer */}
-        <div className="bg-secondary-container rounded-xl p-8 text-on-secondary-container kinetic-float ambient-shadow">
-          <span className="material-symbols-outlined text-4xl mb-4 block">stars</span>
-          <p className="text-xs font-bold uppercase tracking-widest opacity-80">Top Scorer</p>
-          <h3 className="text-2xl font-black font-headline mt-1 truncate">
-            {topScorer?.name ?? "—"}
-          </h3>
-          <p className="text-sm mt-2 font-medium truncate">
-            {topScorer ? `${topScorer.score.toLocaleString()} pts in '${topScorer.activity}'` : "Play a game to see leaders"}
-          </p>
-        </div>
-
-        {/* Activities Created */}
-        <div className="bg-tertiary rounded-xl p-8 text-on-tertiary kinetic-float ambient-shadow flex flex-col justify-between">
-          <div>
-            <span className="material-symbols-outlined text-4xl mb-4 block">
-              extension
-            </span>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-80">Activities</p>
-            <h3 className="text-3xl font-black font-headline mt-1">
-              <AnimatedNumber value={activities.length} />
-            </h3>
-          </div>
-          <p className="text-sm opacity-80">In your library</p>
-        </div>
-      </motion.section>
-
-      {/* ===== My Activities Grid ===== */}
-      <motion.section variants={item} className="space-y-6">
-        <div className="flex justify-between items-end">
-          <div>
-            <KineticHeadline as="h2" size="md" tone="on-surface" rotate={-1}>
-              My Activities
-            </KineticHeadline>
-            <p className="text-on-surface-variant font-body mt-1">
-              Curated games for Year 1 Literacy &amp; Numeracy
-            </p>
-          </div>
-          <Link
-            href="/create"
-            className="text-primary font-bold flex items-center gap-1 hover:underline"
-          >
-            View All
-            <span className="material-symbols-outlined">chevron_right</span>
-          </Link>
-        </div>
-
-        {activities.length === 0 ? (
-          <Link href="/create">
-            <div className="rounded-xl p-12 text-center bg-surface-container-low ambient-shadow kinetic-float cursor-pointer">
-              <div className="text-7xl mb-4">🎮</div>
-              <p className="font-headline font-bold text-xl text-on-surface mb-1">
-                No activities yet
-              </p>
-              <p className="text-on-surface-variant font-body">
-                Tap to create your first game!
-              </p>
-            </div>
-          </Link>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {activities.map((activity) => {
-              const info = GAME_TYPE_INFO[activity.game_type] ?? GAME_TYPE_INFO.quiz;
-              return (
-                <motion.div
-                  key={activity.id}
-                  variants={item}
-                  className="group bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow kinetic-float"
-                >
-                  <div
-                    className="h-36 relative flex items-center justify-center text-7xl"
-                    style={{
-                      background: `linear-gradient(135deg, ${info.color}33, ${info.color}11)`,
-                    }}
-                  >
-                    <span className="group-hover:scale-110 transition-transform duration-500">
-                      {info.emoji}
-                    </span>
-                    <div
-                      className={`absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase ${info.badgeColor}`}
-                    >
-                      {info.badge}
-                    </div>
-                  </div>
-                  <div className="p-5 space-y-4">
-                    <h4 className="text-lg font-bold font-headline truncate">
-                      {activity.title}
-                    </h4>
-                    <div className="flex items-center gap-4 text-xs text-on-surface-variant">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">groups</span>
-                        Live
-                      </span>
-                      <span className="flex items-center gap-1 capitalize">
-                        <span className="material-symbols-outlined text-sm">extension</span>
-                        {activity.game_type.replace("-", " ")}
-                      </span>
-                    </div>
-                    <div className="pt-2 flex gap-2">
-                      <Link
-                        href={`/create/${activity.game_type}?edit=${activity.id}`}
-                        className="flex-1"
-                      >
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          className="w-full py-2 bg-primary/10 text-primary rounded-lg font-bold text-sm hover:bg-primary hover:text-white transition-colors"
-                        >
-                          Edit
-                        </motion.button>
-                      </Link>
-                      <Link href={`/create/${activity.game_type}?play=${activity.id}`}>
-                        <motion.button
-                          whileTap={{ scale: 0.92 }}
-                          whileHover={{ scale: 1.05 }}
-                          className="p-2 px-3 bg-secondary-container text-on-secondary-container rounded-lg flex items-center justify-center"
-                          aria-label={`Play ${activity.title}`}
-                        >
-                          <span className="material-symbols-outlined">play_arrow</span>
-                        </motion.button>
-                      </Link>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            {/* Create New Placeholder */}
-            <Link href="/create">
+            <Link href="/library">
               <motion.div
-                whileHover={{ scale: 1.02, y: -8 }}
-                whileTap={{ scale: 0.98 }}
-                className="rounded-xl flex flex-col items-center justify-center p-8 h-full min-h-[260px] text-on-surface-variant hover:text-primary transition-all cursor-pointer bg-surface-container-low/50 hover:bg-primary/5"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-7 h-12 rounded-full bg-white/15 backdrop-blur-md text-white border border-white/30 font-headline font-bold flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-6xl mb-4">add_circle</span>
-                <p className="font-bold font-headline">Create New Activity</p>
-                <p className="text-sm mt-1">Start from a template</p>
+                My Library
               </motion.div>
             </Link>
           </div>
-        )}
+        </div>
       </motion.section>
 
-      {/* ===== Shared Library ===== */}
-      {sharedActivities.length > 0 && (
-        <motion.section variants={item} className="space-y-6">
+      {/* ===== Today's Pick ===== */}
+      {todaysPick && (
+        <motion.section
+          variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="font-headline font-black text-2xl text-on-surface -rotate-1 origin-left">
+              Today&apos;s Pick
+            </h2>
+            <Link
+              href="/bank"
+              className="focus-ring text-primary font-bold text-sm flex items-center gap-1 hover:underline rounded px-2 py-1"
+            >
+              See all
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                arrow_forward
+              </span>
+            </Link>
+          </div>
+
+          <div
+            className="bg-surface-container-lowest rounded-xl ambient-shadow overflow-hidden flex flex-col md:flex-row"
+          >
+            <div
+              className="md:w-2/5 h-48 md:h-auto relative flex items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, ${pickMeta.gradient[0]}, ${pickMeta.gradient[1]})`,
+              }}
+            >
+              <Image
+                src={pickImage.url}
+                alt={pickImage.alt}
+                width={pickImage.width}
+                height={pickImage.height}
+                priority
+                className="w-32 h-32 md:w-48 md:h-48 object-contain drop-shadow-xl"
+              />
+              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase text-on-surface">
+                {pickMeta.label}
+              </div>
+            </div>
+            <div className="flex-1 p-6 md:p-8 flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                {pickGameInfo && <span aria-hidden="true">{pickGameInfo.emoji}</span>}
+                <span>{pickGameInfo?.label ?? todaysPick.game_type}</span>
+                <span>·</span>
+                <span>{countActivityItems(todaysPick.config_json)} items</span>
+              </div>
+              <h3 className="font-headline font-black text-2xl text-on-surface">
+                {todaysPick.title}
+              </h3>
+              {todaysPick.description && (
+                <p className="text-on-surface-variant font-body">{todaysPick.description}</p>
+              )}
+              <button
+                onClick={() => handleUseTemplate(todaysPick.id)}
+                disabled={launchingId === todaysPick.id}
+                className="focus-ring mt-auto self-start h-12 px-6 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-black inline-flex items-center gap-2 shadow-lg disabled:opacity-50"
+              >
+                {launchingId === todaysPick.id ? (
+                  <>
+                    <span
+                      className="material-symbols-outlined animate-spin"
+                      aria-hidden="true"
+                    >
+                      progress_activity
+                    </span>
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined" aria-hidden="true">
+                      play_arrow
+                    </span>
+                    Use in class
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+      {/* ===== Mini KPI Chips ===== */}
+      <motion.section
+        variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+        className="grid grid-cols-2 md:grid-cols-3 gap-4"
+      >
+        <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              play_circle
+            </span>
+          </div>
           <div>
-            <KineticHeadline as="h2" size="md" tone="on-surface" rotate={-1}>
-              Shared Library
-            </KineticHeadline>
-            <p className="text-on-surface-variant font-body mt-1">
-              Ready-to-play activities from other teachers
+            <p className="text-2xl font-headline font-black text-on-surface">
+              <AnimatedNumber value={totalSessions} />
+            </p>
+            <p className="text-xs text-on-surface-variant font-body uppercase tracking-wider">
+              Recent Sessions
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sharedActivities.map((activity) => {
-              const info = GAME_TYPE_INFO[activity.game_type] ?? GAME_TYPE_INFO.quiz;
+        </div>
+        <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center">
+            <span className="material-symbols-outlined text-tertiary" aria-hidden="true">
+              groups
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-headline font-black text-on-surface">
+              <AnimatedNumber value={totalStudents} />
+            </p>
+            <p className="text-xs text-on-surface-variant font-body uppercase tracking-wider">
+              Students Engaged
+            </p>
+          </div>
+        </div>
+        <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow flex items-center gap-4 col-span-2 md:col-span-1">
+          <div className="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-secondary" aria-hidden="true">
+              extension
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-headline font-black text-on-surface">
+              <AnimatedNumber value={recentActivities.length} />
+            </p>
+            <p className="text-xs text-on-surface-variant font-body uppercase tracking-wider">
+              In Your Library
+            </p>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ===== Continue Where You Left Off ===== */}
+      {recentActivities.length > 0 && (
+        <motion.section
+          variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="font-headline font-black text-2xl text-on-surface -rotate-1 origin-left">
+              Continue where you left off
+            </h2>
+            <Link
+              href="/library"
+              className="focus-ring text-primary font-bold text-sm flex items-center gap-1 hover:underline rounded px-2 py-1"
+            >
+              View all
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                arrow_forward
+              </span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentActivities.map((activity) => {
+              const gameInfo = GAME_TYPE_LABELS[activity.game_type] ?? {
+                label: activity.game_type,
+                emoji: "🎮",
+              };
+              const color = GAME_TYPE_COLOR[activity.game_type] ?? "#707882";
               return (
                 <div
                   key={activity.id}
-                  className="bg-surface-container-lowest rounded-xl overflow-hidden ambient-shadow kinetic-float"
+                  className="bg-surface-container-lowest rounded-xl ambient-shadow overflow-hidden"
                 >
                   <div
-                    className="h-32 relative flex items-center justify-center text-6xl"
+                    className="h-28 flex items-center justify-center text-6xl"
                     style={{
-                      background: `linear-gradient(135deg, ${info.color}33, ${info.color}11)`,
+                      background: `linear-gradient(135deg, ${color}33, ${color}11)`,
                     }}
+                    aria-hidden="true"
                   >
-                    {info.emoji}
-                    <div className="absolute top-3 right-3 bg-tertiary-container/90 text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                      Shared
-                    </div>
+                    {gameInfo.emoji}
                   </div>
                   <div className="p-5 space-y-3">
-                    <h4 className="text-base font-bold font-headline truncate">
+                    <h3 className="font-headline font-black text-base text-on-surface line-clamp-1">
                       {activity.title}
-                    </h4>
-                    <Link href={`/create/${activity.game_type}?play=${activity.id}`}>
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full py-2 bg-secondary-container text-on-secondary-container rounded-lg font-bold text-sm flex items-center justify-center gap-1"
-                      >
-                        <span className="material-symbols-outlined text-base">play_arrow</span>
-                        Play
-                      </motion.button>
-                    </Link>
+                    </h3>
+                    <button
+                      onClick={() => handleUseTemplate(activity.id)}
+                      disabled={launchingId === activity.id}
+                      className="focus-ring w-full h-11 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold text-sm shadow-md disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        play_arrow
+                      </span>
+                      Start
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+        </motion.section>
+      )}
+
+      {/* ===== Recent Sessions ===== */}
+      {recentSessions.length > 0 && (
+        <motion.section
+          variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="font-headline font-black text-2xl text-on-surface -rotate-1 origin-left">
+              Recent Sessions
+            </h2>
+            <Link
+              href="/reports"
+              className="focus-ring text-primary font-bold text-sm flex items-center gap-1 hover:underline rounded px-2 py-1"
+            >
+              Full reports
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                arrow_forward
+              </span>
+            </Link>
+          </div>
+          <ul className="space-y-3">
+            {recentSessions.map((s) => (
+              <li
+                key={s.id}
+                className="bg-surface-container-lowest rounded-2xl p-4 ambient-shadow flex items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-primary" aria-hidden="true">
+                    history
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-headline font-bold text-on-surface truncate">{s.title}</p>
+                  <p className="text-xs text-on-surface-variant font-body">
+                    {new Date(s.startedAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                    })}{" "}
+                    · {s.participants} students
+                  </p>
+                </div>
+                {s.topScorer && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-2xl" aria-hidden="true">
+                      {AVATAR_EMOJI[s.topScorer.avatarId] ?? "⭐"}
+                    </div>
+                    <p className="font-headline font-black text-sm text-primary">
+                      {s.topScorer.score.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         </motion.section>
       )}
     </motion.div>
