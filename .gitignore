@@ -22,7 +22,11 @@
 
 # misc
 .DS_Store
+._*
 *.pem
+
+# stitch HTML cache (re-fetchable)
+/.stitch-cache/
 
 # debug
 npm-debug.log*
