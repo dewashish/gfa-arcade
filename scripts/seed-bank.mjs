@@ -2,8 +2,9 @@
 /**
  * Activity Bank seeder for GFA Arcade.
  *
- * Inserts 25 ready-made Year 1 British curriculum activities into the
+ * Inserts 31 ready-made Year 1 British curriculum activities into the
  * `activities` table with `is_template = true, teacher_id = null`.
+ * (25 original + 6 visual-rich quizzes added 2026-04-11.)
  *
  * Subjects: Maths, Phonics, Science, Geography, History, PSHE.
  * Game types: Quiz, Match Up, Flash Cards, Spin Wheel, Group Sort.
@@ -58,6 +59,7 @@ function quiz(questions, time_limit_seconds = 25) {
       question: q.q,
       options: q.options,
       correct_index: q.options.indexOf(q.correct),
+      ...(q.visual ? { visual: q.visual } : {}),
       time_limit_seconds,
     })),
   };
@@ -520,6 +522,190 @@ const ACTIVITIES = [
       { q: "What should you wear when riding a bike? 🚲", options: ["crown", "helmet", "hat", "nothing"], correct: "helmet" },
       { q: "Which of these is a vegetable? 🥕", options: ["carrot", "cookie", "crisps", "cola"], correct: "carrot" },
     ]),
+  },
+
+  // ============================================================
+  // ========== VISUAL-RICH ACTIVITIES (2026-04-11) =============
+  // ============================================================
+  // These 6 activities use per-question `visual` specs that the
+  // Quiz renderer dispatches to inline SVG components in
+  // src/components/games/visuals/. Each visual is descriptive/
+  // representative — never reveals the answer.
+  //
+  // Count: 6 activities × 15 questions = 90 new questions.
+
+  // ---- Phonics: sounds oy / ir / ue / aw ------------------------
+  {
+    title: "🔤 Sounds: oy, ir, ue, aw",
+    subject: "phonics",
+    topic: "Phase 3 digraph sounds oy ir ue aw",
+    description: "Listen for the special sound in each word and pick the matching digraph.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "oy", visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ir", visual: { kind: "phonics-word", word: "bird", illustration: "bird" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ue", visual: { kind: "phonics-word", word: "blue", illustration: "blue" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "aw", visual: { kind: "phonics-word", word: "saw", illustration: "saw" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "oy", visual: { kind: "phonics-word", word: "toy", illustration: "toy" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ir", visual: { kind: "phonics-word", word: "girl", illustration: "girl" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ue", visual: { kind: "phonics-word", word: "glue", illustration: "glue" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "aw", visual: { kind: "phonics-word", word: "straw", illustration: "straw" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "oy", visual: { kind: "phonics-word", word: "coin", illustration: "coin" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ir", visual: { kind: "phonics-word", word: "shirt", illustration: "shirt" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ue", visual: { kind: "phonics-word", word: "rescue", illustration: "rescue" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "aw", visual: { kind: "phonics-word", word: "paw", illustration: "paw" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "oy", visual: { kind: "phonics-word", word: "oil", illustration: "oil" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ir", visual: { kind: "phonics-word", word: "skirt", illustration: "skirt" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "ue", visual: { kind: "phonics-word", word: "statue", illustration: "statue" } },
+      ],
+      30
+    ),
+  },
+
+  // ---- Maths: Find a half of an object or shape ----------------
+  {
+    title: "➗ Find Half of a Shape",
+    subject: "maths",
+    topic: "Find a half of an object or shape",
+    description: "Look at each shape and decide if it has been split into two equal halves.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Is this circle split into two equal halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "circle", pattern: "half-v" } },
+        { q: "Is this square split into halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "square", pattern: "uneven-2" } },
+        { q: "Is this rectangle split into halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "half-h" } },
+        { q: "Is this pizza cut into halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "pizza", pattern: "quarter" } },
+        { q: "Is this circle split fairly down the middle?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "circle", pattern: "half-h" } },
+        { q: "Are these chocolate pieces equal halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "thirds" } },
+        { q: "Is this square split into two equal halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "square", pattern: "half-diag" } },
+        { q: "Is this rectangle split into halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "thirds" } },
+        { q: "Is this pizza split into halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "half-v" } },
+        { q: "Is this circle split into halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "circle", pattern: "thirds" } },
+        { q: "Is this square split into two equal parts?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "square", pattern: "half-v" } },
+        { q: "Is this chocolate bar split in half?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "half-v" } },
+        { q: "Are these rectangle pieces equal halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "uneven-2" } },
+        { q: "Is this pizza split into two equal halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "half-h" } },
+        { q: "Is this square split into halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "square", pattern: "quarter" } },
+      ],
+      25
+    ),
+  },
+
+  // ---- Maths: Recognise a half of a quantity -------------------
+  {
+    title: "➗ Recognise Half of a Quantity",
+    subject: "maths",
+    topic: "Recognise a half of a quantity",
+    description: "Look at the group of objects and decide if the given number is half of the total.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Is 4 half of 8?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "apple", count: 8, divider: 4 } },
+        { q: "Is 5 half of 10?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "star", count: 10, divider: 5 } },
+        { q: "Is 2 half of 6?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "smile", count: 6, divider: 2 } },
+        { q: "Is 2 half of 4?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "heart", count: 4, divider: 2 } },
+        { q: "Is 6 half of 12?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "cookie", count: 12, divider: 6 } },
+        { q: "Is 4 half of 6?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "balloon", count: 6, divider: 4 } },
+        { q: "Is 3 half of 10?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "dot", count: 10, divider: 3 } },
+        { q: "Is 1 half of 2?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "star", count: 2, divider: 1 } },
+        { q: "Is 7 half of 14?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "apple", count: 14, divider: 7 } },
+        { q: "Is 3 half of 8?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "cookie", count: 8, divider: 3 } },
+        { q: "Is 3 half of 6?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "balloon", count: 6, divider: 3 } },
+        { q: "Is 4 half of 12?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "smile", count: 12, divider: 4 } },
+        { q: "Is 5 half of 10?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "heart", count: 10, divider: 5 } },
+        { q: "Is 4 half of 8?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "dot", count: 8, divider: 4 } },
+        { q: "Is 2 half of 8?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "apple", count: 8, divider: 2 } },
+      ],
+      25
+    ),
+  },
+
+  // ---- Maths: Find a half of a quantity -----------------------
+  {
+    title: "➗ Find Half of a Quantity",
+    subject: "maths",
+    topic: "Find a half of a quantity",
+    description: "Count the objects and pick the number that is half of the total.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "What is half of 4?", options: ["1", "2", "3", "4"], correct: "2", visual: { kind: "counted-objects", object: "apple", count: 4 } },
+        { q: "What is half of 6?", options: ["2", "3", "4", "5"], correct: "3", visual: { kind: "counted-objects", object: "star", count: 6 } },
+        { q: "What is half of 8?", options: ["2", "3", "4", "5"], correct: "4", visual: { kind: "counted-objects", object: "smile", count: 8 } },
+        { q: "What is half of 10?", options: ["3", "4", "5", "6"], correct: "5", visual: { kind: "counted-objects", object: "heart", count: 10 } },
+        { q: "What is half of 12?", options: ["4", "5", "6", "7"], correct: "6", visual: { kind: "counted-objects", object: "cookie", count: 12 } },
+        { q: "What is half of 2?", options: ["1", "2", "3", "4"], correct: "1", visual: { kind: "counted-objects", object: "balloon", count: 2 } },
+        { q: "What is half of 14?", options: ["5", "6", "7", "8"], correct: "7", visual: { kind: "counted-objects", object: "dot", count: 14 } },
+        { q: "What is half of 16?", options: ["6", "7", "8", "9"], correct: "8", visual: { kind: "counted-objects", object: "apple", count: 16 } },
+        { q: "What is half of 18?", options: ["7", "8", "9", "10"], correct: "9", visual: { kind: "counted-objects", object: "star", count: 18 } },
+        { q: "What is half of 20?", options: ["8", "9", "10", "11"], correct: "10", visual: { kind: "counted-objects", object: "smile", count: 20 } },
+        { q: "Half of 6 is…", options: ["2", "3", "4", "5"], correct: "3", visual: { kind: "counted-objects", object: "heart", count: 6 } },
+        { q: "Half of 10 is…", options: ["3", "4", "5", "6"], correct: "5", visual: { kind: "counted-objects", object: "cookie", count: 10 } },
+        { q: "Half of 4 is…", options: ["1", "2", "3", "4"], correct: "2", visual: { kind: "counted-objects", object: "balloon", count: 4 } },
+        { q: "Half of 12 is…", options: ["4", "5", "6", "7"], correct: "6", visual: { kind: "counted-objects", object: "dot", count: 12 } },
+        { q: "Half of 8 is…", options: ["2", "3", "4", "5"], correct: "4", visual: { kind: "counted-objects", object: "apple", count: 8 } },
+      ],
+      30
+    ),
+  },
+
+  // ---- Maths: Recognise a quarter of a shape ------------------
+  {
+    title: "➗ Recognise a Quarter of a Shape",
+    subject: "maths",
+    topic: "Recognise a quarter of an object or a shape",
+    description: "Look at each shape and decide if it has been split into four equal quarters.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Is this pizza cut into quarters?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "quarter" } },
+        { q: "Is this circle cut into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "circle", pattern: "half-v" } },
+        { q: "Is this square split into 4 equal parts?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "square", pattern: "quarter" } },
+        { q: "Is this rectangle cut into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "half-h" } },
+        { q: "Is this chocolate bar split into 4 equal pieces?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "quarter" } },
+        { q: "Is this pizza cut into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "pizza", pattern: "thirds" } },
+        { q: "Is this circle split into 4 equal pieces?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "circle", pattern: "quarter" } },
+        { q: "Are these pieces a fair quarter?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "square", pattern: "uneven-2" } },
+        { q: "Is the yellow part one quarter of the rectangle?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "quarter" } },
+        { q: "Is this chocolate split into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "half-v" } },
+        { q: "Is this circle divided into 4 quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "circle", pattern: "half-h" } },
+        { q: "Is this shape showing quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "square", pattern: "half-v" } },
+        { q: "Does this pizza have 4 equal slices?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "quarter" } },
+        { q: "Is this rectangle cut into 4 quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "thirds" } },
+        { q: "Is this chocolate split into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "thirds" } },
+      ],
+      25
+    ),
+  },
+
+  // ---- Science: Magnets & Materials ---------------------------
+  {
+    title: "🧲 Magnets & Materials",
+    subject: "science",
+    topic: "Magnets — magnetic vs non-magnetic materials",
+    description: "Look at each item next to the magnet and decide whether it is magnetic or not.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Will the magnet stick to this iron nail?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "nail" } },
+        { q: "Is this plastic toy magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "plastic-toy" } },
+        { q: "Will the magnet stick to this metal spoon?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "spoon" } },
+        { q: "Is paper magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "paper" } },
+        { q: "Will a magnet stick to a wooden block?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "wood-block" } },
+        { q: "Will the magnet stick to this metal key?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "key" } },
+        { q: "Is a rubber band magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "rubber-band" } },
+        { q: "Will a magnet pick up a paperclip?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "paperclip" } },
+        { q: "Will the magnet stick to these metal scissors?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "scissors" } },
+        { q: "Is a sponge magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "sponge" } },
+        { q: "Will a magnet stick to a glass cup?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "glass" } },
+        { q: "Is an ice cube magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "fridge" } },
+        { q: "Will the magnet stick to this metal fork?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "fork" } },
+        { q: "Is a rubber eraser magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "eraser" } },
+        { q: "Will a magnet stick to a copper coin?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "coin" } },
+      ],
+      25
+    ),
   },
 ];
 
