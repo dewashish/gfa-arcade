@@ -135,6 +135,7 @@ export type Database = {
           is_correct: boolean;
           time_taken_ms: number;
           answered_at: string;
+          selected_index: number | null;
         };
         Insert: {
           id?: string;
@@ -145,6 +146,7 @@ export type Database = {
           is_correct?: boolean;
           time_taken_ms?: number;
           answered_at?: string;
+          selected_index?: number | null;
         };
         Update: never;
         Relationships: [];

@@ -15,11 +15,13 @@ interface GameState {
   // Game state
   phase: GamePhase;
   config: ActivityConfig | null;
+  activityTitle: string | null;
   currentRound: number;
   totalRounds: number;
   myScore: number;
   myStreak: number;
   leaderboard: LeaderboardEntry[];
+  answeredStudentIds: string[];
 
   // Spin wheel specific
   spinAngle: number;
@@ -35,6 +37,8 @@ interface GameState {
   setStudent: (studentId: string, name: string, avatarId: string) => void;
   setTeacher: (isTeacher: boolean) => void;
   setConfig: (config: ActivityConfig) => void;
+  setActivityTitle: (title: string) => void;
+  setAnsweredStudentIds: (ids: string[]) => void;
   setPhase: (phase: GamePhase) => void;
   setCurrentRound: (round: number) => void;
   addScore: (points: number) => void;
@@ -58,11 +62,13 @@ const initialState = {
   isTeacher: false,
   phase: "waiting" as GamePhase,
   config: null,
+  activityTitle: null,
   currentRound: 0,
   totalRounds: 0,
   myScore: 0,
   myStreak: 0,
   leaderboard: [],
+  answeredStudentIds: [] as string[],
   spinAngle: 0,
   spinSegmentIndex: -1,
   currentQuestionIndex: 0,
@@ -88,6 +94,8 @@ export const useGameStore = create<GameState>((set) => ({
             : 1;
     set({ config, totalRounds });
   },
+  setActivityTitle: (title) => set({ activityTitle: title }),
+  setAnsweredStudentIds: (ids) => set({ answeredStudentIds: ids }),
   setPhase: (phase) => set({ phase }),
   setCurrentRound: (round) => set({ currentRound: round }),
   addScore: (points) => set((s) => ({ myScore: s.myScore + points })),

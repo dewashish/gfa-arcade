@@ -14,6 +14,9 @@ import { Quiz } from "@/components/games/Quiz";
 import { LiveLeaderboard } from "@/components/shared/LiveLeaderboard";
 import { CelebrationOverlay } from "@/components/shared/CelebrationOverlay";
 import { ShareWithClassModal } from "@/components/shared/ShareWithClassModal";
+import { AnswerStatusPanel } from "@/components/shared/AnswerStatusPanel";
+import { StudentDetailModal } from "@/components/shared/StudentDetailModal";
+import { CertificatesPreviewModal } from "@/components/shared/CertificatesPreviewModal";
 import { SimulateClassButton } from "@/components/dev/SimulateClassButton";
 import type {
   ActivityConfig,
@@ -36,6 +39,8 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [presentMode, setPresentMode] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCertificatesModal, setShowCertificatesModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [leaderboardView, setLeaderboardView] = useState<"podium" | "list">("podium");
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
@@ -75,6 +80,28 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       .eq("session_id", sessionId);
     setParticipants(count ?? 0);
   }, [sessionId]);
+
+  // ===== Answered-status refresh (feature 2) =====
+  // Queries game_scores for the current question index and pushes the
+  // resulting set of student_ids into the store so AnswerStatusPanel can
+  // render the still-thinking / answered split.
+  const refreshAnswered = useCallback(async () => {
+    if (store.phase !== "playing") return;
+    const supabase = supabaseRef.current;
+    const { data, error } = await supabase
+      .from("game_scores")
+      .select("student_id")
+      .eq("session_id", sessionId)
+      .eq("question_index", store.currentQuestionIndex);
+    if (error) {
+      console.warn("[monitor] answered refresh error:", error.message);
+      return;
+    }
+    if (!data) return;
+    const ids = Array.from(new Set(data.map((r) => r.student_id)));
+    store.setAnsweredStudentIds(ids);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, store.phase, store.currentQuestionIndex]);
 
   // ===== Init =====
   useEffect(() => {
@@ -147,9 +174,10 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     const id = setInterval(() => {
       refreshLeaderboard();
       refreshParticipants();
+      refreshAnswered();
     }, 1500);
     return () => clearInterval(id);
-  }, [store.phase, refreshLeaderboard, refreshParticipants]);
+  }, [store.phase, refreshLeaderboard, refreshParticipants, refreshAnswered]);
 
   async function handleStartGame() {
     play("whoosh");
@@ -160,6 +188,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       .update({ status: "playing", current_question_index: 0 })
       .eq("id", sessionId);
     store.setCurrentQuestion(0);
+    store.setAnsweredStudentIds([]);
     store.setPhase("playing");
     timer.start();
     realtimeRef.current?.broadcastEvent({ type: "game:start" });
@@ -198,6 +227,9 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     }
     play("whoosh");
     store.setCurrentQuestion(next);
+    // Fresh question → nobody has answered yet. Reset immediately so the
+    // teacher sees an empty "Answered" strip the instant she advances.
+    store.setAnsweredStudentIds([]);
     // Persist server-side so any student who joins after this point
     // reads the right question instead of re-rendering question 0.
     await supabaseRef.current
@@ -414,7 +446,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       {/* ===== Main Split: Game + Leaderboard ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Game Area (2/3) */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -458,16 +490,30 @@ export function TeacherMonitorClient({ sessionId }: Props) {
                     🥇 {winnerName} — {winnerScore.toLocaleString()} pts
                   </p>
                 )}
-                <button
-                  onClick={() => setShowCelebration(true)}
-                  className="mt-6 px-6 py-3 rounded-full bg-secondary-container text-on-secondary-container font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform"
-                >
-                  <span className="material-symbols-outlined">celebration</span>
-                  Show Celebration
-                </button>
+                <div className="flex items-center justify-center gap-3 flex-wrap mt-6">
+                  <button
+                    onClick={() => setShowCelebration(true)}
+                    className="px-6 py-3 rounded-full bg-secondary-container text-on-secondary-container font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform"
+                  >
+                    <span className="material-symbols-outlined">celebration</span>
+                    Show Celebration
+                  </button>
+                  <button
+                    onClick={() => setShowCertificatesModal(true)}
+                    className="px-6 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform shadow-md"
+                  >
+                    <span className="material-symbols-outlined">workspace_premium</span>
+                    Certificates
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>
+
+          {/* Answered / still-thinking split while a quiz is running */}
+          {store.phase === "playing" && store.config?.type === "quiz" && (
+            <AnswerStatusPanel onStudentClick={setSelectedStudentId} />
+          )}
         </div>
 
         {/* Leaderboard (1/3) */}
@@ -504,7 +550,10 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           </div>
 
           <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow max-h-[75vh] overflow-y-auto">
-            <LiveLeaderboard variant={leaderboardView === "podium" ? "full" : "compact"} />
+            <LiveLeaderboard
+              variant={leaderboardView === "podium" ? "full" : "compact"}
+              onRowClick={setSelectedStudentId}
+            />
           </div>
         </motion.div>
       </div>
@@ -514,6 +563,22 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         title={winnerName ? `${winnerName} wins!` : "Game Over!"}
         subtitle={winnerName ? `${winnerScore.toLocaleString()} points` : undefined}
         onDismiss={() => setShowCelebration(false)}
+      />
+
+      {/* Feature 3: per-student answer history modal */}
+      <StudentDetailModal
+        open={!!selectedStudentId}
+        sessionId={sessionId}
+        studentId={selectedStudentId}
+        activityConfig={store.config}
+        onClose={() => setSelectedStudentId(null)}
+      />
+
+      {/* Feature 4: teacher-side certificate bulk preview / download */}
+      <CertificatesPreviewModal
+        open={showCertificatesModal}
+        activityTitle={activityTitle}
+        onClose={() => setShowCertificatesModal(false)}
       />
 
       <ShareWithClassModal
