@@ -20,6 +20,41 @@ interface Props {
 
 const GAME_TYPES = ["quiz", "spin-wheel", "match-up", "flashcards", "group-sort"];
 
+/**
+ * Text tab with a sliding primary underline — matches the Stitch
+ * Activity Bank mockup. Inline helper so we don't create a new primitive
+ * for a one-off layout element.
+ */
+function GameTypeTab({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`relative focus-ring pb-2 transition-colors ${
+        active ? "text-primary" : "hover:text-primary"
+      }`}
+    >
+      {label}
+      {active && (
+        <motion.span
+          layoutId="game-type-underline"
+          className="absolute left-0 right-0 -bottom-0.5 h-1 rounded-full bg-primary"
+          transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        />
+      )}
+    </button>
+  );
+}
+
 export function BankClient({ templates, fetchError }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -143,83 +178,100 @@ export function BankClient({ templates, fetchError }: Props) {
         hidden: { opacity: 0 },
         show: { opacity: 1, transition: { staggerChildren: STAGGER.base, delayChildren: 0.05 } },
       }}
-      className="space-y-8"
+      className="space-y-10"
     >
-      {/* Header */}
-      <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}>
-        <KineticHeadline as="h1" size="lg" tone="on-surface" rotate={-1}>
-          Activity <span className="text-primary-container">Bank</span>
-        </KineticHeadline>
-        <p className="text-on-surface-variant font-body mt-2 text-lg">
-          {templates.length} ready-made activities, aligned to the UK Year 1 curriculum.
-          Tap <span className="text-primary font-bold">Use in class</span> to launch one straight into a live session.
-        </p>
-      </motion.div>
+      {/* ============ HERO ============ */}
+      {/* Centered kinetic headline with floating emoji decorations.
+          Mirrors the Stitch "Activity Bank Catalog" layout. */}
+      <motion.section
+        variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+        className="relative py-10 md:py-12 px-4 overflow-visible"
+      >
+        <motion.div
+          className="absolute -top-2 left-4 md:left-16 text-5xl select-none pointer-events-none"
+          animate={{ y: [0, -10, 0], rotate: [0, -6, 0] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+          aria-hidden="true"
+        >
+          🚀
+        </motion.div>
+        <motion.div
+          className="absolute top-1/2 right-4 md:right-16 text-4xl select-none pointer-events-none"
+          animate={{ rotate: [8, 20, 8], scale: [1, 1.08, 1] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+          aria-hidden="true"
+        >
+          ⭐
+        </motion.div>
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <h1
+            className="font-headline font-black text-4xl md:text-6xl tracking-tight text-on-surface mb-5 leading-[1.05]"
+            style={{ transform: "rotate(-1deg)" }}
+          >
+            Activity{" "}
+            <span className="inline-block bg-secondary-container px-5 md:px-6 py-1.5 md:py-2 rounded-full text-on-secondary-container shadow-sm">
+              Bank
+            </span>
+          </h1>
+          <p className="font-body text-base md:text-xl text-on-surface-variant max-w-2xl leading-relaxed">
+            {templates.length} ready-made Year 1 curriculum activities — just tap{" "}
+            <span className="font-bold text-primary">&apos;Use in class&apos;</span>
+          </p>
+        </div>
+      </motion.section>
 
-      {/* Subject filter row */}
+      {/* ============ SUBJECT FILTER CHIPS ============ */}
+      {/* Centered row, wraps on narrow screens. White pills, tertiary-
+          teal active. Matches Stitch. */}
       <motion.div
         variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-        className="space-y-3"
+        className="flex flex-wrap gap-3 items-center justify-center"
       >
-        <p className="text-xs uppercase tracking-widest font-bold text-on-surface-variant">
-          Subject
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <SubjectChip
-            active={subjectParam === "all"}
-            onClick={() => setFilter("subject", "all")}
-            label="All Subjects"
-            emoji="✨"
-            count={subjectCounts.all}
-            tone="all"
-          />
-          {SUBJECT_KEYS.map((key) => {
-            const meta = SUBJECT_META[key];
-            return (
-              <SubjectChip
-                key={key}
-                active={subjectParam === key}
-                onClick={() => setFilter("subject", key)}
-                label={meta.label}
-                emoji={meta.emoji}
-                count={subjectCounts[key] ?? 0}
-                tone={key}
-              />
-            );
-          })}
-        </div>
+        <SubjectChip
+          active={subjectParam === "all"}
+          onClick={() => setFilter("subject", "all")}
+          label="All"
+          emoji="✨"
+          count={subjectCounts.all}
+        />
+        {SUBJECT_KEYS.map((key) => {
+          const meta = SUBJECT_META[key];
+          return (
+            <SubjectChip
+              key={key}
+              active={subjectParam === key}
+              onClick={() => setFilter("subject", key)}
+              label={meta.label}
+              emoji={meta.emoji}
+              count={subjectCounts[key] ?? 0}
+            />
+          );
+        })}
       </motion.div>
 
-      {/* Game type filter row */}
+      {/* ============ GAME TYPE UNDERLINE TABS ============ */}
+      {/* Centered row of text tabs with a primary underline on the
+          active one — matches Stitch's simpler, editorial feel. */}
       <motion.div
         variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-        className="space-y-3"
+        className="flex flex-wrap items-center justify-center gap-6 md:gap-8 text-sm font-headline font-bold text-on-surface-variant"
       >
-        <p className="text-xs uppercase tracking-widest font-bold text-on-surface-variant">
-          Game Type
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <SubjectChip
-            active={gameTypeParam === "all"}
-            onClick={() => setFilter("type", "all")}
-            label="All Games"
-            emoji="🎮"
-            tone="all"
-          />
-          {GAME_TYPES.map((type) => {
-            const info = GAME_TYPE_LABELS[type] ?? { label: type, emoji: "🎮" };
-            return (
-              <SubjectChip
-                key={type}
-                active={gameTypeParam === type}
-                onClick={() => setFilter("type", type)}
-                label={info.label}
-                emoji={info.emoji}
-                tone="all"
-              />
-            );
-          })}
-        </div>
+        <GameTypeTab
+          active={gameTypeParam === "all"}
+          onClick={() => setFilter("type", "all")}
+          label="All Games"
+        />
+        {GAME_TYPES.map((type) => {
+          const info = GAME_TYPE_LABELS[type] ?? { label: type, emoji: "🎮" };
+          return (
+            <GameTypeTab
+              key={type}
+              active={gameTypeParam === type}
+              onClick={() => setFilter("type", type)}
+              label={info.label}
+            />
+          );
+        })}
       </motion.div>
 
       {/* Launch error toast */}
@@ -249,7 +301,7 @@ export function BankClient({ templates, fetchError }: Props) {
       )}
 
       {/* Results count */}
-      <p className="text-sm text-on-surface-variant font-body">
+      <p className="text-sm text-on-surface-variant font-body text-center">
         Showing <strong>{filtered.length}</strong> of {templates.length} activities
       </p>
 
@@ -271,7 +323,7 @@ export function BankClient({ templates, fetchError }: Props) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map((activity, idx) => (
             <BankCard
               key={activity.id}
