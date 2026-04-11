@@ -2,10 +2,11 @@
 /**
  * Activity Bank seeder for GFA Arcade.
  *
- * Inserts 34 ready-made Year 1 British curriculum activities into the
+ * Inserts 38 ready-made Year 1 British curriculum activities into the
  * `activities` table with `is_template = true, teacher_id = null`.
  * (25 original + 6 visual-rich deep-dive quizzes + 3 mixed-topic
- * review quizzes added 2026-04-11.)
+ * review quizzes + 4 Phase 2 game-type showcase activities added
+ * 2026-04-11.)
  *
  * Subjects: Maths, Phonics, Science, Geography, History, PSHE.
  * Game types: Quiz, Match Up, Flash Cards, Spin Wheel, Group Sort.
@@ -778,6 +779,117 @@ const ACTIVITIES = [
       ],
       30
     ),
+  },
+
+  // ============================================================
+  // ========== PHASE 2: Game-type showcase activities =========
+  // ============================================================
+  // Four activities that exercise the enriched SpinWheel, MatchUp,
+  // FlashCards, and GroupSort components built in Phase 2. Each one
+  // uses the new optional emoji / image_url / itemIcons fields so
+  // the visual enhancements show up as soon as they load.
+
+  // ---- SpinWheel: Phonics Sound Spin --------------------------
+  {
+    title: "🎡 Phonics Sound Spin",
+    subject: "phonics",
+    topic: "Digraph sound spin wheel",
+    description: "Spin the wheel and say a word that contains the sound it lands on.",
+    difficulty: "easy",
+    config: {
+      type: "spin-wheel",
+      rounds: 8,
+      segments: [
+        { label: "oy", value: 100, emoji: "👦", color: "#2E97E6" },
+        { label: "ir", value: 100, emoji: "🐦", color: "#FFB800" },
+        { label: "ue", value: 100, emoji: "🔵", color: "#00A396" },
+        { label: "aw", value: 100, emoji: "🪚", color: "#FF8A80" },
+        { label: "sh", value: 200, emoji: "🐟", color: "#E040FB" },
+        { label: "ch", value: 200, emoji: "🪑", color: "#00629E" },
+        { label: "th", value: 200, emoji: "👍", color: "#7C5800" },
+        { label: "Double", value: 0, emoji: "✨", special: "x2", color: "#00C853" },
+      ],
+    },
+  },
+
+  // ---- MatchUp: Magnetic Materials Match ----------------------
+  {
+    title: "🧲 Magnetic Materials Match",
+    subject: "science",
+    topic: "Match materials with magnetic / non-magnetic labels",
+    description: "Drag each material to its magnetic or non-magnetic description.",
+    difficulty: "easy",
+    config: matchUp(
+      [
+        { term: "Iron nail", definition: "Magnetic – metal", emoji: "🔩" },
+        { term: "Plastic toy", definition: "Not magnetic – plastic", emoji: "🧸" },
+        { term: "Metal spoon", definition: "Magnetic – metal", emoji: "🥄" },
+        { term: "Paper", definition: "Not magnetic – paper", emoji: "📄" },
+        { term: "Wooden block", definition: "Not magnetic – wood", emoji: "🪵" },
+        { term: "Paperclip", definition: "Magnetic – metal", emoji: "📎" },
+      ],
+      120
+    ),
+  },
+
+  // ---- FlashCards: Halves & Quarters Recap --------------------
+  {
+    title: "🃏 Halves & Quarters Recap",
+    subject: "maths",
+    topic: "Flash-card review of halves and quarters",
+    description: "Flip each card to check your answer. Perfect after playing the Halves & Quarters Mix quiz.",
+    difficulty: "easy",
+    config: flashCards([
+      { front: "Half of 10", back: "5", emoji: "❤️" },
+      { front: "Half of 8", back: "4", emoji: "🍎" },
+      { front: "Half of 6", back: "3", emoji: "⭐" },
+      { front: "Half of 4", back: "2", emoji: "🎈" },
+      { front: "Half of 12", back: "6", emoji: "🍪" },
+      { front: "A half has ___ equal pieces", back: "2 equal pieces", emoji: "🍕" },
+      { front: "A quarter has ___ equal pieces", back: "4 equal pieces", emoji: "🟰" },
+      { front: "Half of 20", back: "10", emoji: "😊" },
+      { front: "Quarter of 8", back: "2", emoji: "🍫" },
+      { front: "Quarter of 4", back: "1", emoji: "🍰" },
+    ]),
+  },
+
+  // ---- GroupSort: Magnetic or Non-Magnetic --------------------
+  {
+    title: "🧲 Sort: Magnetic or Not",
+    subject: "science",
+    topic: "Sort household items into magnetic and non-magnetic buckets",
+    description: "Drag each item into the bucket that matches whether a magnet sticks to it.",
+    difficulty: "easy",
+    config: {
+      type: "group-sort",
+      time_limit_seconds: 120,
+      groups: [
+        {
+          name: "Magnetic",
+          emoji: "🧲",
+          items: ["Iron nail", "Metal spoon", "Metal fork", "Paperclip", "Metal key", "Scissors"],
+        },
+        {
+          name: "Not Magnetic",
+          emoji: "🚫",
+          items: ["Paper", "Wooden block", "Plastic toy", "Rubber band", "Sponge", "Glass cup"],
+        },
+      ],
+      itemIcons: {
+        "Iron nail": "🔩",
+        "Metal spoon": "🥄",
+        "Metal fork": "🍴",
+        "Paperclip": "📎",
+        "Metal key": "🔑",
+        "Scissors": "✂️",
+        "Paper": "📄",
+        "Wooden block": "🪵",
+        "Plastic toy": "🧸",
+        "Rubber band": "➰",
+        "Sponge": "🧽",
+        "Glass cup": "🥛",
+      },
+    },
   },
 
   // ---- Science: Year 1 Review ---------------------------------

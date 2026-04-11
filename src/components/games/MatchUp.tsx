@@ -21,12 +21,25 @@ interface MatchUpProps {
   onAnswer: (pairIndex: number, correct: boolean, timeTakenMs: number) => void;
 }
 
+/**
+ * MatchUp — Phase 2 enrichment.
+ *
+ * Changes vs. the original:
+ *  - Renders `pair.emoji` (new) and `pair.image_url` (already on type
+ *    but previously unused) inside the draggable term card so Year 1
+ *    readers have a visual anchor beyond the word.
+ *  - Responsive grid: stacks to a single column on < md so phones/
+ *    tablets don't overflow.
+ *  - Drop zones pulse and scale more dramatically when hovered.
+ *  - Correct matches get a scale+bounce animation as they lock in.
+ *  - All-matched celebration animates in with a big spring.
+ */
 export function MatchUp({ config, onAnswer }: MatchUpProps) {
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrongPair, setWrongPair] = useState<number | null>(null);
   const [startTime] = useState(Date.now());
   const { play } = useSound();
-  const { burst } = useConfetti();
+  const { burst, fireworks } = useConfetti();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -52,24 +65,25 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
       const defIndex = over.id as number;
 
       if (termIndex === defIndex) {
-        // Correct match!
         setMatched((prev) => new Set([...prev, termIndex]));
         play("correct");
+        play("ding");
         onAnswer(termIndex, true, Date.now() - startTime);
 
         if (matched.size + 1 === config.pairs.length) {
           burst();
+          fireworks();
           play("confetti");
+          play("tada");
         }
       } else {
-        // Wrong match
         setWrongPair(termIndex);
         play("wrong");
         onAnswer(termIndex, false, Date.now() - startTime);
         setTimeout(() => setWrongPair(null), 800);
       }
     },
-    [config.pairs.length, matched.size, onAnswer, play, burst, startTime]
+    [config.pairs.length, matched.size, onAnswer, play, burst, fireworks, startTime]
   );
 
   const allMatched = matched.size === config.pairs.length;
@@ -77,41 +91,44 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-8 gap-4">
           <motion.h2
             initial={{ opacity: 0, y: 20, rotate: 0 }}
             animate={{ opacity: 1, y: 0, rotate: -1 }}
             transition={{ type: "spring", stiffness: 220 }}
-            className="font-headline text-3xl md:text-4xl font-black text-primary origin-left"
+            className="font-headline text-2xl md:text-4xl font-black text-primary origin-left"
           >
             Match the pairs!
           </motion.h2>
-          <span className="text-on-surface-variant font-body font-bold text-lg">
+          <span className="text-on-surface-variant font-headline font-black text-lg md:text-xl shrink-0">
             {matched.size} / {config.pairs.length}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-8">
-          {/* Terms (left) */}
+        {/* Responsive grid: single column on phones, 2 cols on md+ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+          {/* Terms (left / top) */}
           <div className="space-y-3">
-            <p className="text-sm font-body text-on-surface-variant mb-2 font-medium">
-              Drag these...
+            <p className="text-xs uppercase tracking-widest font-headline font-black text-on-surface-variant mb-2">
+              Drag these…
             </p>
             {config.pairs.map((pair, i) => (
               <DraggableTerm
                 key={`term-${i}`}
                 id={i}
                 label={pair.term}
+                emoji={pair.emoji}
+                imageUrl={pair.image_url}
                 isMatched={matched.has(i)}
                 isWrong={wrongPair === i}
               />
             ))}
           </div>
 
-          {/* Definitions (right, shuffled) */}
+          {/* Definitions (right / bottom, shuffled) */}
           <div className="space-y-3">
-            <p className="text-sm font-body text-on-surface-variant mb-2 font-medium">
-              ...to match here
+            <p className="text-xs uppercase tracking-widest font-headline font-black text-on-surface-variant mb-2">
+              …to match here
             </p>
             {shuffledDefs.map((origIdx) => (
               <DroppableDefinition
@@ -124,17 +141,25 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
           </div>
         </div>
 
-        {allMatched && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="text-center mt-8"
-          >
-            <p className="font-headline text-3xl font-bold text-tertiary">
-              All Matched! Great Job! 🎉
-            </p>
-          </motion.div>
-        )}
+        {/* All-matched celebration */}
+        <AnimatePresence>
+          {allMatched && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 14 }}
+              className="text-center mt-10"
+            >
+              <p className="font-headline text-4xl md:text-5xl font-black text-tertiary">
+                🎉 All Matched! 🎉
+              </p>
+              <p className="font-body text-lg text-on-surface-variant mt-2">
+                Amazing work!
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DndContext>
   );
@@ -143,11 +168,15 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
 function DraggableTerm({
   id,
   label,
+  emoji,
+  imageUrl,
   isMatched,
   isWrong,
 }: {
   id: number;
   label: string;
+  emoji?: string;
+  imageUrl?: string;
   isMatched: boolean;
   isWrong: boolean;
 }) {
@@ -161,36 +190,57 @@ function DraggableTerm({
     : undefined;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        ref={setNodeRef}
-        {...listeners}
-        {...attributes}
-        style={style}
-        animate={
-          isWrong
-            ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } }
+    <motion.div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={style}
+      animate={
+        isWrong
+          ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } }
+          : isMatched
+            ? { scale: [1, 1.08, 1], transition: { duration: 0.4 } }
             : {}
+      }
+      className={`
+        p-4 rounded-2xl font-body text-base cursor-grab active:cursor-grabbing
+        transition-colors select-none touch-manipulation
+        ${
+          isMatched
+            ? "bg-tertiary-container/25 text-tertiary line-through opacity-60"
+            : isDragging
+              ? "bg-primary-container/30 text-primary shadow-2xl scale-105 ring-4 ring-primary/30"
+              : "bg-surface-container-lowest text-on-surface ambient-shadow hover:shadow-lg"
         }
-        className={`
-          p-4 rounded-xl font-body text-base cursor-grab active:cursor-grabbing
-          transition-colors select-none touch-manipulation
-          ${
-            isMatched
-              ? "bg-tertiary-container/20 text-tertiary line-through opacity-50"
-              : isDragging
-                ? "bg-primary-container/30 text-primary shadow-lg scale-105"
-                : "bg-surface-lowest text-on-surface ambient-shadow"
-          }
-          ${isWrong ? "bg-error-container text-on-error-container" : ""}
-        `}
-      >
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-lg opacity-50">drag_indicator</span>
-          {label}
-        </div>
-      </motion.div>
-    </AnimatePresence>
+        ${isWrong ? "bg-error-container text-on-error-container ring-4 ring-error/40" : ""}
+      `}
+    >
+      <div className="flex items-center gap-3">
+        <span className="material-symbols-outlined text-lg opacity-50 shrink-0">
+          drag_indicator
+        </span>
+        {/* Emoji anchor (or image if supplied) */}
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            className="w-12 h-12 object-contain shrink-0 drop-shadow-md"
+            aria-hidden="true"
+          />
+        ) : emoji ? (
+          <motion.span
+            className="text-3xl md:text-4xl shrink-0"
+            animate={isDragging ? { rotate: [0, -6, 6, 0] } : {}}
+            transition={{ duration: 0.6, repeat: isDragging ? Infinity : 0 }}
+            aria-hidden="true"
+          >
+            {emoji}
+          </motion.span>
+        ) : null}
+        <span className="font-headline font-bold text-lg md:text-xl flex-1">{label}</span>
+      </div>
+    </motion.div>
   );
 }
 
@@ -206,25 +256,40 @@ function DroppableDefinition({
   const { isOver, setNodeRef } = useDroppable({ id });
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
+      animate={
+        isOver && !isMatched
+          ? { scale: 1.04 }
+          : isMatched
+            ? { scale: [1, 1.05, 1] }
+            : { scale: 1 }
+      }
+      transition={{ type: "spring", stiffness: 320, damping: 20 }}
       className={`
-        p-4 rounded-xl font-body text-base transition-all
+        p-4 rounded-2xl font-body text-base transition-colors
         ${
           isMatched
-            ? "bg-tertiary-container/20 text-tertiary"
+            ? "bg-tertiary-container/25 text-tertiary ring-2 ring-tertiary/40"
             : isOver
-              ? "bg-primary-container/15 ring-2 ring-primary-container scale-[1.02]"
-              : "bg-surface-low text-on-surface-variant border-2 border-dashed border-outline-variant"
+              ? "bg-primary-container/20 ring-4 ring-primary"
+              : "bg-surface-container-low text-on-surface-variant border-2 border-dashed border-outline-variant/50"
         }
       `}
     >
-      {isMatched && (
-        <span className="material-symbols-outlined text-tertiary mr-2 align-middle">
-          check_circle
-        </span>
-      )}
-      {label}
-    </div>
+      <div className="flex items-center gap-2">
+        {isMatched && (
+          <motion.span
+            initial={{ scale: 0, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 320 }}
+            className="material-symbols-outlined text-tertiary text-2xl shrink-0"
+          >
+            check_circle
+          </motion.span>
+        )}
+        <span className="font-headline font-bold text-lg flex-1">{label}</span>
+      </div>
+    </motion.div>
   );
 }
