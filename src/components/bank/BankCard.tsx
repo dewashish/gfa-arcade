@@ -44,7 +44,7 @@ export function BankCard({ activity, index, onPreview, onUse, isLaunching }: Ban
       animate={{ opacity: 1, y: 0 }}
       transition={{
         ...SPRING.bouncy,
-        delay: Math.min(index * 0.04, 0.4),
+        delay: Math.min(index * 0.02, 0.2),
       }}
       onHoverStart={() => setHover(true)}
       onHoverEnd={() => setHover(false)}
