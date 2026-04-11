@@ -180,23 +180,18 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* ===== Floating Decorative Shapes ===== */}
+      {/* ===== Floating Decorative Shapes (decorative only, start visible) ===== */}
       {FLOATING_SHAPES.map((shape, i) => (
         <motion.div
           key={i}
           aria-hidden="true"
-          className={`absolute pointer-events-none ${shape.size} select-none`}
+          className={`absolute pointer-events-none ${shape.size} select-none opacity-50`}
           style={{ left: shape.x, top: shape.y }}
-          initial={{ opacity: 0, scale: 0 }}
           animate={{
-            opacity: [0, 0.6, 0.6, 0.4, 0.6],
-            scale: [0, 1, 1.05, 0.95, 1],
             y: [0, -20, 0, 15, 0],
             rotate: [0, 8, -5, 6, 0],
           }}
           transition={{
-            opacity: { duration: 1.2, delay: shape.delay },
-            scale: { duration: 1.2, delay: shape.delay, ease: EASING.bouncy },
             y: { duration: shape.duration, repeat: Infinity, ease: "easeInOut", delay: shape.delay },
             rotate: { duration: shape.duration * 1.3, repeat: Infinity, ease: "easeInOut", delay: shape.delay },
           }}
@@ -205,13 +200,8 @@ export default function LoginPage() {
         </motion.div>
       ))}
 
-      {/* ===== Brand Header ===== */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={SPRING.snappy}
-        className="absolute top-8 left-1/2 -translate-x-1/2 text-center z-10"
-      >
+      {/* ===== Brand Header (starts visible, motion.div uses style, not animate-from-hidden) ===== */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center z-10">
         <div className="flex items-center justify-center gap-3 mb-1">
           <motion.div
             animate={{ rotate: [0, 5, -5, 0] }}
@@ -229,7 +219,7 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ===== Tilt Card ===== */}
       <div
@@ -245,9 +235,6 @@ export default function LoginPage() {
             rotateY: springY,
             transformStyle: "preserve-3d",
           }}
-          initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
-          animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-          transition={{ ...SPRING.bouncy, delay: 0.2 }}
           className="bg-white/85 backdrop-blur-xl rounded-xl ambient-shadow-lg p-8 md:p-12 relative"
         >
           {/* Specular highlight */}
@@ -288,7 +275,7 @@ export default function LoginPage() {
           </div>
 
           {/* ===== Sign In ===== */}
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {mode === "signin" && (
               <motion.form
                 key="signin"
@@ -300,13 +287,11 @@ export default function LoginPage() {
                 className="space-y-5"
                 style={{ transform: "translateZ(20px)" }}
               >
-                <motion.h2
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: -1 }}
-                  className="font-headline font-black text-3xl md:text-4xl text-on-surface text-center origin-center"
+                <h2
+                  className="font-headline font-black text-3xl md:text-4xl text-on-surface text-center origin-center -rotate-1"
                 >
                   Welcome <span className="text-primary">back!</span>
-                </motion.h2>
+                </h2>
                 <p className="text-on-surface-variant text-center font-body">
                   Log in to start your adventure
                 </p>
@@ -531,13 +516,9 @@ function SignupStepCard({
       className="space-y-5"
     >
       <div className="text-center">
-        <motion.h2
-          initial={{ rotate: 0 }}
-          animate={{ rotate: -1 }}
-          className="font-headline font-black text-3xl md:text-4xl text-on-surface origin-center"
-        >
+        <h2 className="font-headline font-black text-3xl md:text-4xl text-on-surface origin-center -rotate-1">
           {title}
-        </motion.h2>
+        </h2>
         <p className="text-on-surface-variant font-body mt-1">{subtitle}</p>
       </div>
       {children}
