@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { joinGameSession } from "@/lib/game-engine/session-manager";
@@ -17,8 +17,19 @@ const decorVariants = {
 };
 
 export default function StudentJoinPage() {
-  const [step, setStep] = useState<Step>("pin");
-  const [pin, setPin] = useState("");
+  return (
+    <Suspense fallback={null}>
+      <StudentJoinContent />
+    </Suspense>
+  );
+}
+
+function StudentJoinContent() {
+  const searchParams = useSearchParams();
+  const pinFromUrl = (searchParams.get("pin") ?? "").replace(/\D/g, "").slice(0, 6);
+
+  const [step, setStep] = useState<Step>(pinFromUrl.length === 6 ? "name" : "pin");
+  const [pin, setPin] = useState(pinFromUrl);
   const [name, setName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("lion");
   const [error, setError] = useState("");
@@ -26,6 +37,15 @@ export default function StudentJoinPage() {
   const router = useRouter();
   const { setSession, setStudent } = useGameStore();
   const { play } = useSound();
+
+  // Watch for late ?pin= changes (e.g. via share link)
+  useEffect(() => {
+    if (pinFromUrl.length === 6 && pin !== pinFromUrl) {
+      setPin(pinFromUrl);
+      setStep("name");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinFromUrl]);
 
   async function handleJoin() {
     if (!pin || !name) return;

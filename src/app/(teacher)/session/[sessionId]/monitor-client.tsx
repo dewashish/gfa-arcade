@@ -13,6 +13,7 @@ import { SpinWheel } from "@/components/games/SpinWheel";
 import { Quiz } from "@/components/games/Quiz";
 import { LiveLeaderboard } from "@/components/shared/LiveLeaderboard";
 import { CelebrationOverlay } from "@/components/shared/CelebrationOverlay";
+import { ShareWithClassModal } from "@/components/shared/ShareWithClassModal";
 import { SimulateClassButton } from "@/components/dev/SimulateClassButton";
 import type {
   ActivityConfig,
@@ -34,6 +35,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [activityTitle, setActivityTitle] = useState("");
   const [presentMode, setPresentMode] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [leaderboardView, setLeaderboardView] = useState<"podium" | "list">("podium");
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
@@ -335,6 +337,17 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         </div>
 
         <div className="flex gap-3 flex-wrap items-start">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowShareModal(true)}
+            className="focus-ring inline-flex items-center justify-center gap-2 h-11 px-5 font-headline font-bold text-sm text-on-secondary-container bg-secondary-container rounded-full shadow-md"
+          >
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              share
+            </span>
+            Share with Class
+          </motion.button>
           <SimulateClassButton sessionId={sessionId} />
           {store.phase === "waiting" && (
             <motion.button
@@ -486,6 +499,12 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         title={winnerName ? `${winnerName} wins!` : "Game Over!"}
         subtitle={winnerName ? `${winnerScore.toLocaleString()} points` : undefined}
         onDismiss={() => setShowCelebration(false)}
+      />
+
+      <ShareWithClassModal
+        open={showShareModal}
+        pinCode={pinCode}
+        onClose={() => setShowShareModal(false)}
       />
     </div>
   );
