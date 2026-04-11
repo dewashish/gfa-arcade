@@ -9,6 +9,18 @@ export async function createGameSession(
   supabase: SupabaseClient<Database>,
   activityId: string
 ) {
+  // Get the current teacher so we can tag the session with teacher_id.
+  // Without this, template-launched sessions end up with no teacher
+  // reference on the row and RLS blocks the teacher from reading
+  // their own sessions (the activity_id points at a template with
+  // teacher_id IS NULL).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Not authenticated — cannot create a session.");
+  }
+
   // Generate unique PIN with collision check
   let pinCode = generatePin();
   let attempts = 0;
@@ -31,7 +43,11 @@ export async function createGameSession(
 
   const { data, error } = await supabase
     .from("game_sessions")
-    .insert({ activity_id: activityId, pin_code: pinCode })
+    .insert({
+      activity_id: activityId,
+      pin_code: pinCode,
+      teacher_id: user.id,
+    })
     .select()
     .single();
 
