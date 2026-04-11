@@ -27,6 +27,101 @@ export type MatchUpConfig = {
   time_limit_seconds?: number;
 };
 
+/**
+ * Per-question visual that renders above the question text. A
+ * discriminated union so each visual gets its own typed props. The
+ * `VisualRegistry` component dispatches on `kind`.
+ *
+ * Visuals are descriptive/representative — they never reveal the
+ * answer. The correct option lives only in `correct_index`.
+ */
+export type QuestionVisual =
+  /** One shape (circle, square, rect, pizza, chocolate bar) cut into
+   *  a specific pattern, used as a context image above text options.
+   *  Animates with a gentle pulse + idle sway. */
+  | {
+      kind: "shape-fraction";
+      shape: "circle" | "square" | "rectangle" | "pizza" | "chocolate";
+      /** Which cut pattern to draw. "half-v" = vertical half,
+       *  "half-h" = horizontal half, "quarter" = 4 equal quarters,
+       *  "uneven-2" = 2 unequal pieces, "thirds" = 3 equal thirds. */
+      pattern:
+        | "whole"
+        | "half-v"
+        | "half-h"
+        | "half-diag"
+        | "quarter"
+        | "uneven-2"
+        | "thirds";
+      /** Optional highlight colour for the "shaded" piece. */
+      highlight?: string;
+    }
+  /** Grid of 4 shape variants labelled A/B/C/D — student picks which
+   *  one matches the question. Each variant has its own cut pattern. */
+  | {
+      kind: "shape-option-grid";
+      shape: "circle" | "square" | "rectangle" | "pizza" | "chocolate";
+      patterns: Array<"whole" | "half-v" | "half-h" | "half-diag" | "quarter" | "uneven-2" | "thirds">;
+    }
+  /** A row/grid of N identical countable objects (apples, smiles,
+   *  stars, dots) used for counting and "half of a quantity" questions. */
+  | {
+      kind: "counted-objects";
+      object: "apple" | "smile" | "star" | "dot" | "heart" | "cookie" | "balloon";
+      count: number;
+      /** If set, splits the row with a thin divider at this index to
+       *  visually show the "half" or "quarter" split. Never reveals
+       *  the answer because the divider is always at the midpoint for
+       *  "find half of N" questions, not the correct pick. */
+      divider?: number;
+    }
+  /** A magnet next to a household item with a subtle gravitational
+   *  wobble between them. Used for magnetic/non-magnetic questions. */
+  | {
+      kind: "magnet-object";
+      /** Which everyday item to show alongside the magnet. */
+      object:
+        | "nail"
+        | "spoon"
+        | "fork"
+        | "paper"
+        | "plastic-toy"
+        | "wood-block"
+        | "rubber-band"
+        | "key"
+        | "coin"
+        | "scissors"
+        | "sponge"
+        | "glass"
+        | "fridge"
+        | "paperclip"
+        | "eraser";
+    }
+  /** A simple illustrated word (boy, bird, shirt, flower, boot) paired
+   *  with its emoji/cartoon, used for phonics recognition. */
+  | {
+      kind: "phonics-word";
+      word: string;
+      /** Which mini cartoon to render next to the word. */
+      illustration:
+        | "boy"
+        | "toy"
+        | "coin"
+        | "oil"
+        | "bird"
+        | "girl"
+        | "shirt"
+        | "skirt"
+        | "blue"
+        | "glue"
+        | "rescue"
+        | "statue"
+        | "saw"
+        | "straw"
+        | "paw"
+        | "yawn";
+    };
+
 export type QuizConfig = {
   type: "quiz";
   questions: Array<{
@@ -34,6 +129,7 @@ export type QuizConfig = {
     options: string[];
     correct_index: number;
     image_url?: string;
+    visual?: QuestionVisual;
     time_limit_seconds?: number;
   }>;
 };

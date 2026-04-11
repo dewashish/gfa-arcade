@@ -6,6 +6,7 @@ import { useGameStore } from "@/stores/game-store";
 import { useSound } from "@/hooks/useSound";
 import { useConfetti } from "@/hooks/useConfetti";
 import { TimerRing } from "@/components/ui/TimerRing";
+import { VisualRegistry } from "@/components/games/visuals/VisualRegistry";
 import type { QuizConfig } from "@/lib/game-engine/types";
 
 interface QuizProps {
@@ -162,10 +163,29 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
           exit={{ opacity: 0, y: -30 }}
           transition={{ type: "spring", stiffness: 280, damping: 24 }}
         >
+          {/* ===== Per-question visual (context) ===== */}
+          {/* When the question carries a `visual` spec the renderer
+              dispatches to the right inline SVG component. Always
+              decorative/representative — never reveals the answer. */}
+          {question.visual && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
+              className="flex items-center justify-center mb-6"
+            >
+              <VisualRegistry visual={question.visual} />
+            </motion.div>
+          )}
+
           <motion.h2
             initial={{ rotate: 0 }}
             animate={{ rotate: -1 }}
-            className="font-headline text-4xl md:text-6xl font-black text-on-surface text-center mb-10 leading-tight origin-center"
+            className={`font-headline font-black text-on-surface text-center leading-tight origin-center ${
+              question.visual
+                ? "text-2xl md:text-4xl mb-8"
+                : "text-4xl md:text-6xl mb-10"
+            }`}
           >
             {question.question}
           </motion.h2>
