@@ -6,8 +6,22 @@ export interface ReportSession {
   id: string;
   title: string;
   startedAt: string;
+  // Formatted server-side to avoid React #418 hydration mismatches when
+  // the server and client sit in different timezones.
+  dateLabel: string;
   participants: number;
   topScorer: { name: string; avatarId: string; score: number } | null;
+}
+
+// Format dates server-side in UTC so the string is deterministic regardless
+// of where hydration runs. Format: "11 Apr 2026".
+function formatSessionDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(iso));
 }
 
 export interface ReportActivityStat {
@@ -76,6 +90,7 @@ export default async function ReportsPage() {
         id: s.id,
         title: s.activities?.title ?? "Untitled",
         startedAt: s.started_at,
+        dateLabel: formatSessionDate(s.started_at),
         participants: pCount ?? 0,
         topScorer: stu
           ? {

@@ -102,6 +102,10 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         setActivityTitle(activity.title);
       }
 
+      // Restore persisted question index so a teacher refresh doesn't
+      // snap the view back to question 0.
+      store.setCurrentQuestion(session.current_question_index ?? 0);
+
       if (session.status === "playing") {
         store.setPhase("playing");
         timer.start();
@@ -150,7 +154,12 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   async function handleStartGame() {
     play("whoosh");
     const supabase = supabaseRef.current;
-    await updateSessionStatus(supabase, sessionId, "playing");
+    // Reset question index server-side so mid-joiners always start fresh
+    await supabase
+      .from("game_sessions")
+      .update({ status: "playing", current_question_index: 0 })
+      .eq("id", sessionId);
+    store.setCurrentQuestion(0);
     store.setPhase("playing");
     timer.start();
     realtimeRef.current?.broadcastEvent({ type: "game:start" });
@@ -180,7 +189,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     });
   }
 
-  function handleNextQuestion() {
+  async function handleNextQuestion() {
     const config = store.config as QuizConfig;
     const next = store.currentQuestionIndex + 1;
     if (next >= config.questions.length) {
@@ -189,6 +198,12 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     }
     play("whoosh");
     store.setCurrentQuestion(next);
+    // Persist server-side so any student who joins after this point
+    // reads the right question instead of re-rendering question 0.
+    await supabaseRef.current
+      .from("game_sessions")
+      .update({ current_question_index: next })
+      .eq("id", sessionId);
     realtimeRef.current?.broadcastEvent({
       type: "game:next_question",
       questionIndex: next,

@@ -8,6 +8,7 @@ import { SPRING } from "@/lib/design/motion";
 interface TeacherHeaderProps {
   teacherName: string;
   teacherEmail?: string;
+  teacherRole?: string;
 }
 
 /**
@@ -17,7 +18,11 @@ interface TeacherHeaderProps {
  * Brand on the left, breadcrumb in the middle, profile menu on the right.
  * Sidebar is the single source of nav truth.
  */
-export function TeacherHeader({ teacherName, teacherEmail }: TeacherHeaderProps) {
+export function TeacherHeader({
+  teacherName,
+  teacherEmail,
+  teacherRole = "Year 1 Teacher",
+}: TeacherHeaderProps) {
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -51,7 +56,11 @@ export function TeacherHeader({ teacherName, teacherEmail }: TeacherHeaderProps)
       </div>
 
       {/* Right: profile menu */}
-      <ProfileMenu teacherName={teacherName} teacherEmail={teacherEmail} />
+      <ProfileMenu
+        teacherName={teacherName}
+        teacherEmail={teacherEmail}
+        teacherRole={teacherRole}
+      />
     </motion.header>
   );
 }

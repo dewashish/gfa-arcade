@@ -152,11 +152,7 @@ export function ReportsClient({ sessions, totalSessions, totalStudents, activity
               key={s.id}
               index={idx}
               title={s.title}
-              date={new Date(s.startedAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              date={s.dateLabel}
               participants={s.participants}
               topScorer={s.topScorer}
             />

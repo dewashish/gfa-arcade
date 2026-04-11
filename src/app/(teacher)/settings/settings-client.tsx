@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { KineticHeadline } from "@/components/ui/KineticHeadline";
-import { SPRING, TRANSITION } from "@/lib/design/motion";
+import { SPRING } from "@/lib/design/motion";
 
 interface Props {
   email: string;
@@ -37,26 +37,41 @@ export function SettingsClient({
   const [classroom, setClassroom] = useState(initialClassroom);
   const [role, setRole] = useState(initialRole);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSave() {
     setSavingProfile(true);
-    setSaved(false);
+    setSaveState("idle");
+    setSaveError(null);
     try {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
-      await supabase
+      if (!user) {
+        setSaveState("error");
+        setSaveError("You're signed out. Please sign in again.");
+        return;
+      }
+      const { error } = await supabase
         .from("teachers")
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update({ name, school_name: schoolName, classroom, role } as any)
         .eq("id", user.id);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      if (error) {
+        setSaveState("error");
+        setSaveError(error.message);
+        return;
+      }
+      setSaveState("saved");
+      // Stay on screen long enough that teachers notice even if they glanced away.
+      setTimeout(() => setSaveState("idle"), 4000);
+    } catch (err) {
+      setSaveState("error");
+      setSaveError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSavingProfile(false);
     }
@@ -79,6 +94,49 @@ export function SettingsClient({
           Your profile and account
         </p>
       </div>
+
+      {/* Save banner — lives above the profile card so it's impossible to miss */}
+      <AnimatePresence>
+        {saveState === "saved" && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={SPRING.snappy}
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-tertiary-container text-on-tertiary-container ambient-shadow"
+          >
+            <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+              check_circle
+            </span>
+            <div>
+              <p className="font-headline font-bold">Saved!</p>
+              <p className="text-sm font-body opacity-80">Your profile is up to date.</p>
+            </div>
+          </motion.div>
+        )}
+        {saveState === "error" && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={SPRING.snappy}
+            role="alert"
+            className="flex items-center gap-3 px-5 py-4 rounded-2xl bg-error-container text-on-error-container ambient-shadow"
+          >
+            <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+              error
+            </span>
+            <div>
+              <p className="font-headline font-bold">Couldn&apos;t save</p>
+              <p className="text-sm font-body opacity-80">
+                {saveError ?? "Please try again."}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Profile section */}
       <section className="bg-surface-container-lowest rounded-xl ambient-shadow p-6 md:p-8 space-y-6">
@@ -191,24 +249,6 @@ export function SettingsClient({
                 </>
               )}
             </button>
-            <AnimatePresence>
-              {saved && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={TRANSITION.fast}
-                  role="status"
-                  aria-live="polite"
-                  className="flex items-center gap-2 text-tertiary font-bold font-body text-sm"
-                >
-                  <span className="material-symbols-outlined" aria-hidden="true">
-                    check_circle
-                  </span>
-                  Saved
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </section>

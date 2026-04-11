@@ -14,12 +14,15 @@ export async function createGameSession(
   let attempts = 0;
 
   while (attempts < 10) {
+    // maybeSingle() returns null (no error) when 0 rows match, instead of the
+    // 406 PostgREST throws for .single() on an empty result. Generating a
+    // fresh PIN is the common case, so we want the empty result to be silent.
     const { data: existing } = await supabase
       .from("game_sessions")
       .select("id")
       .eq("pin_code", pinCode)
       .eq("status", "waiting")
-      .single();
+      .maybeSingle();
 
     if (!existing) break;
     pinCode = generatePin();

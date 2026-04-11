@@ -70,6 +70,12 @@ export default async function DashboardPage() {
         id: s.id,
         title: s.activities?.title ?? "Untitled",
         startedAt: s.started_at,
+        // Pre-formatted server-side (UTC) so hydration can't disagree.
+        dateLabel: new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          timeZone: "UTC",
+        }).format(new Date(s.started_at)),
         participants: pCount ?? 0,
         topScorer: stu
           ? { name: stu.name, avatarId: stu.avatar_id, score: top?.score ?? 0 }

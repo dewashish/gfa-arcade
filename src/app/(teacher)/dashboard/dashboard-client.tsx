@@ -44,6 +44,8 @@ interface RecentSession {
   id: string;
   title: string;
   startedAt: string;
+  // Pre-formatted by the server page to avoid hydration mismatches.
+  dateLabel: string;
   participants: number;
   topScorer: { name: string; avatarId: string; score: number } | null;
 }
@@ -531,11 +533,7 @@ export function DashboardClient({
                     {s.title}
                   </p>
                   <p className="text-sm text-on-surface-variant font-body">
-                    {new Date(s.startedAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                    })}{" "}
-                    · {s.participants} students
+                    {s.dateLabel} · {s.participants} students
                   </p>
                 </div>
                 {s.topScorer && (

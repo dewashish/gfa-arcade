@@ -26,6 +26,12 @@ const SEGMENT_LABELS: Record<string, string> = {
   leaderboard: "Leaderboard",
 };
 
+// Segments whose parent folder has no page.tsx — only dynamic child routes
+// (e.g. /session/[sessionId]). Rendering a <Link href="/session"> for these
+// causes Next.js to prefetch the bare URL and log a 404. /create and /play
+// DO have page.tsx, so they remain linkable.
+const CONTAINER_ONLY_SEGMENTS = new Set(["session", "leaderboard"]);
+
 export function Breadcrumb({ leafLabel }: BreadcrumbProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
@@ -46,7 +52,11 @@ export function Breadcrumb({ leafLabel }: BreadcrumbProps) {
     // Skip dynamic-route brackets
     const cleaned = seg.replace(/^\[|\]$/g, "");
     const label = isLast && leafLabel ? leafLabel : SEGMENT_LABELS[cleaned] ?? cleaned;
-    crumbs.push({ label, href: isLast ? null : acc });
+    // Container-only parents (e.g. /session) can't be linked — no page.tsx
+    // exists at that URL, so the Link would prefetch a 404.
+    const isContainerOnly = CONTAINER_ONLY_SEGMENTS.has(cleaned);
+    const href = isLast || isContainerOnly ? null : acc;
+    crumbs.push({ label, href });
   });
 
   return (

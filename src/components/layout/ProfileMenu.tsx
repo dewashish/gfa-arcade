@@ -10,9 +10,14 @@ import { TRANSITION, SPRING } from "@/lib/design/motion";
 interface ProfileMenuProps {
   teacherName: string;
   teacherEmail?: string;
+  teacherRole?: string;
 }
 
-export function ProfileMenu({ teacherName, teacherEmail }: ProfileMenuProps) {
+export function ProfileMenu({
+  teacherName,
+  teacherEmail,
+  teacherRole = "Year 1 Teacher",
+}: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
@@ -52,7 +57,7 @@ export function ProfileMenu({ teacherName, teacherEmail }: ProfileMenuProps) {
         <div className="hidden md:block text-right">
           <p className="font-headline font-bold text-sm leading-tight">{teacherName}</p>
           <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">
-            Year 1 Lead
+            {teacherRole}
           </p>
         </div>
         <div

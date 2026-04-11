@@ -55,6 +55,11 @@ export function GamePlayClient({ sessionId }: Props) {
         store.setConfig(config.config_json);
       }
 
+      // Sync to whatever question the teacher has advanced to. Without this,
+      // a student who joins after the teacher clicked "Next" renders question 0
+      // until the next broadcast, skipping the question entirely.
+      store.setCurrentQuestion(session.current_question_index ?? 0);
+
       if (session.status === "playing") {
         store.setPhase("playing");
       } else if (session.status === "finished") {

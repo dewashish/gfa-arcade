@@ -16,9 +16,13 @@ const navItems = [
 interface TeacherSidebarProps {
   teacherName?: string;
   teacherEmail?: string;
+  teacherRole?: string;
 }
 
-export function TeacherSidebar({ teacherName = "Teacher" }: TeacherSidebarProps) {
+export function TeacherSidebar({
+  teacherName = "Teacher",
+  teacherRole = "Year 1 Teacher",
+}: TeacherSidebarProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -88,8 +92,8 @@ export function TeacherSidebar({ teacherName = "Teacher" }: TeacherSidebarProps)
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold truncate">{teacherName}</p>
-            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">
-              Year 1 Lead
+            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider truncate">
+              {teacherRole}
             </p>
           </div>
         </div>
