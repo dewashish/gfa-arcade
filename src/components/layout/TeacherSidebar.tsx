@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -35,11 +36,19 @@ export function TeacherSidebar({
       aria-label="Primary navigation"
       className="hidden md:flex flex-col h-screen p-6 w-72 bg-surface-container-lowest shrink-0 sticky top-0 rounded-r-[3rem] shadow-[20px_0_60px_rgba(0,98,158,0.04)]"
     >
-      <div className="mb-10 px-4">
-        <h1 className="text-xl font-black text-primary font-headline">Adventure Hub</h1>
-        <p className="text-xs text-on-surface-variant font-medium uppercase tracking-wider mt-1">
-          Year 1 · Masdar City
-        </p>
+      {/* School brand — the GEMS Founders School Masdar City logo sits
+          at the top of the sidebar as the school identity. The app
+          name ("Founders Arcade / Teacher's Portal") lives in the
+          header, so there's no text duplication between the two. */}
+      <div className="mb-10 flex flex-col items-center">
+        <Image
+          src="/gems-logo.png"
+          alt="GEMS Founders School Masdar City"
+          width={531}
+          height={131}
+          priority
+          className="w-full max-w-[200px] h-auto select-none"
+        />
       </div>
 
       <nav className="flex-1 space-y-2" aria-label="Sections">
