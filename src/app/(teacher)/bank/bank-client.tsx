@@ -64,29 +64,34 @@ export function BankClient({ templates, fetchError }: Props) {
     });
   }, [templates, subjectParam, gameTypeParam]);
 
-  async function handleUse(activity: BankActivity) {
+  function handleUse(activity: BankActivity) {
+    // Instant local feedback — "Starting..." chip paints immediately.
+    // The async RPC + navigation run inside a transition so React keeps
+    // the rest of the UI interactive while Supabase does its thing.
     setLaunchingId(activity.id);
     setLaunchError(null);
-    try {
-      const supabase = createClient();
-      const session = await createGameSession(supabase, activity.id);
-      router.push(`/session/${session.id}`);
-    } catch (e) {
-      // Surface the real error so RLS / DB issues are visible.
-      // Per ui-ux-pro-max error-clarity rule: include cause + how to fix.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const err = e as any;
-      const message =
-        err?.message ??
-        (typeof e === "string" ? e : "Couldn't start the game.");
-      const code = err?.code ? ` (code: ${err.code})` : "";
-      const hint = err?.hint ? ` Hint: ${err.hint}` : "";
-      const fullMessage = `${message}${code}${hint}`;
+    startTransition(async () => {
+      try {
+        const supabase = createClient();
+        const session = await createGameSession(supabase, activity.id);
+        router.push(`/session/${session.id}`);
+      } catch (e) {
+        // Surface the real error so RLS / DB issues are visible.
+        // Per ui-ux-pro-max error-clarity rule: include cause + how to fix.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = e as any;
+        const message =
+          err?.message ??
+          (typeof e === "string" ? e : "Couldn't start the game.");
+        const code = err?.code ? ` (code: ${err.code})` : "";
+        const hint = err?.hint ? ` Hint: ${err.hint}` : "";
+        const fullMessage = `${message}${code}${hint}`;
 
-      console.error("[bank] createGameSession failed", e);
-      setLaunchError(fullMessage);
-      setLaunchingId(null);
-    }
+        console.error("[bank] createGameSession failed", e);
+        setLaunchError(fullMessage);
+        setLaunchingId(null);
+      }
+    });
   }
 
   // ===== Empty / error states =====

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -42,6 +42,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [showCertificatesModal, setShowCertificatesModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [leaderboardView, setLeaderboardView] = useState<"podium" | "list">("podium");
+  const [, startTransition] = useTransition();
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
 
@@ -167,41 +168,65 @@ export function TeacherMonitorClient({ sessionId }: Props) {
 
   // ===== Polling fallback =====
   // postgres_changes can fail silently or take a while to propagate.
-  // We poll the leaderboard + participant count every 1.5s while the session
-  // is active so the UI updates reliably regardless of realtime state.
+  // We poll the leaderboard + participant count + answered-set every 2s
+  // while the session is active. Perf-critical bits:
+  //  - `Promise.all` fires the three queries in parallel so the slowest
+  //    one caps the tick cost instead of summing them.
+  //  - `document.visibilityState` guard skips the tick when the tab is
+  //    backgrounded (e.g., teacher switched to Classroom tab) — no point
+  //    hammering Supabase when nobody's looking.
   useEffect(() => {
     if (store.phase === "finished") return;
     const id = setInterval(() => {
-      refreshLeaderboard();
-      refreshParticipants();
-      refreshAnswered();
-    }, 1500);
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+      Promise.all([
+        refreshLeaderboard(),
+        refreshParticipants(),
+        refreshAnswered(),
+      ]).catch((err) => {
+        console.warn("[monitor] poll tick failed:", err);
+      });
+    }, 2000);
     return () => clearInterval(id);
   }, [store.phase, refreshLeaderboard, refreshParticipants, refreshAnswered]);
 
-  async function handleStartGame() {
+  function handleStartGame() {
+    // Optimistic: flip local state first so the UI reacts instantly.
+    // The DB write happens in a transition in the background; the 1.5s
+    // polling loop + realtime subscription self-heal if anything drifts.
     play("whoosh");
-    const supabase = supabaseRef.current;
-    // Reset question index server-side so mid-joiners always start fresh
-    await supabase
-      .from("game_sessions")
-      .update({ status: "playing", current_question_index: 0 })
-      .eq("id", sessionId);
     store.setCurrentQuestion(0);
     store.setAnsweredStudentIds([]);
     store.setPhase("playing");
     timer.start();
     realtimeRef.current?.broadcastEvent({ type: "game:start" });
+    startTransition(async () => {
+      const supabase = supabaseRef.current;
+      const { error } = await supabase
+        .from("game_sessions")
+        .update({ status: "playing", current_question_index: 0 })
+        .eq("id", sessionId);
+      if (error) console.warn("[monitor] startGame persist failed:", error.message);
+    });
   }
 
-  async function handleEndGame() {
+  function handleEndGame() {
+    // Optimistic: phase flips to "finished" immediately so the teacher
+    // sees the celebration overlay without waiting for the RPC.
     play("tada");
-    const supabase = supabaseRef.current;
-    await endGameSession(supabase, sessionId);
     store.setPhase("finished");
     timer.pause();
     realtimeRef.current?.broadcastEvent({ type: "game:end" });
     setShowCelebration(true);
+    startTransition(async () => {
+      try {
+        await endGameSession(supabaseRef.current, sessionId);
+      } catch (err) {
+        console.warn("[monitor] endGame persist failed:", err);
+      }
+    });
   }
 
   function handleSpin(segmentIndex: number) {
@@ -218,7 +243,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     });
   }
 
-  async function handleNextQuestion() {
+  function handleNextQuestion() {
     const config = store.config as QuizConfig;
     const next = store.currentQuestionIndex + 1;
     if (next >= config.questions.length) {
@@ -226,19 +251,24 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       return;
     }
     play("whoosh");
+    // Optimistic local advance so the teacher sees the next question
+    // the moment she clicks, not after the Supabase round-trip.
     store.setCurrentQuestion(next);
     // Fresh question → nobody has answered yet. Reset immediately so the
     // teacher sees an empty "Answered" strip the instant she advances.
     store.setAnsweredStudentIds([]);
-    // Persist server-side so any student who joins after this point
-    // reads the right question instead of re-rendering question 0.
-    await supabaseRef.current
-      .from("game_sessions")
-      .update({ current_question_index: next })
-      .eq("id", sessionId);
     realtimeRef.current?.broadcastEvent({
       type: "game:next_question",
       questionIndex: next,
+    });
+    startTransition(async () => {
+      // Persist server-side so any student who joins after this point
+      // reads the right question instead of re-rendering question 0.
+      const { error } = await supabaseRef.current
+        .from("game_sessions")
+        .update({ current_question_index: next })
+        .eq("id", sessionId);
+      if (error) console.warn("[monitor] nextQuestion persist failed:", error.message);
     });
   }
 
