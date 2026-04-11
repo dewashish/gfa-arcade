@@ -1,9 +1,20 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BankClient } from "./bank-client";
 import type { BankActivity } from "@/lib/bank/types";
 
 export default async function BankPage() {
   const supabase = await createClient();
+
+  // Auth check FIRST — every other teacher page does this. Without it,
+  // unauthenticated requests run the activities query and hang waiting
+  // for it to complete (or for RLS to deny it), then the (teacher)
+  // layout redirects after 30+ seconds. Match the pattern used by
+  // /library, /reports, /settings.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   // Fetch all template activities. RLS policy "Anyone can view templates"
   // makes this safe for any authenticated user.
