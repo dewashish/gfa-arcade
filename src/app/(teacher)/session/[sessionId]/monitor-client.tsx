@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -38,6 +38,42 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
 
+  // ===== Leaderboard refresh (callable from realtime + polling) =====
+  const refreshLeaderboard = useCallback(async () => {
+    const supabase = supabaseRef.current;
+    const { data: entries, error } = await supabase
+      .from("leaderboard_entries")
+      .select("student_id, total_score, students(name, avatar_id)")
+      .eq("session_id", sessionId)
+      .order("total_score", { ascending: false });
+
+    if (error) {
+      console.warn("[monitor] leaderboard refresh error:", error.message);
+      return;
+    }
+    if (!entries) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mapped = entries.map((e: any, idx: number) => ({
+      student_id: e.student_id,
+      student_name: e.students?.name ?? "Player",
+      avatar_id: e.students?.avatar_id ?? "cat",
+      total_score: e.total_score ?? 0,
+      rank: idx + 1,
+    }));
+    store.setLeaderboard(mapped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  // ===== Participant count refresh (also polled) =====
+  const refreshParticipants = useCallback(async () => {
+    const supabase = supabaseRef.current;
+    const { count } = await supabase
+      .from("session_participants")
+      .select("*", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    setParticipants(count ?? 0);
+  }, [sessionId]);
+
   // ===== Init =====
   useEffect(() => {
     const supabase = supabaseRef.current;
@@ -71,23 +107,17 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         store.setPhase("finished");
       }
 
-      // Count participants
-      const { count } = await supabase
-        .from("session_participants")
-        .select("*", { count: "exact", head: true })
-        .eq("session_id", sessionId);
-      setParticipants(count ?? 0);
-
+      await refreshParticipants();
       await refreshLeaderboard();
 
-      // Realtime
+      // Realtime (best effort — polling is the reliable backup)
       const rtm = new RealtimeManager(supabase);
       realtimeRef.current = rtm;
       rtm.joinChannel(
         sessionId,
         (event) => {
           if (event.type === "game:join") {
-            setParticipants((p) => p + 1);
+            refreshParticipants();
             play("join");
           }
         },
@@ -97,29 +127,23 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       );
     }
 
-    async function refreshLeaderboard() {
-      const { data: entries } = await supabase
-        .from("leaderboard_entries")
-        .select("student_id, total_score, students(name, avatar_id)")
-        .eq("session_id", sessionId)
-        .order("total_score", { ascending: false });
-
-      if (!entries) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped = entries.map((e: any, idx: number) => ({
-        student_id: e.student_id,
-        student_name: e.students?.name ?? "Player",
-        avatar_id: e.students?.avatar_id ?? "cat",
-        total_score: e.total_score ?? 0,
-        rank: idx + 1,
-      }));
-      store.setLeaderboard(mapped);
-    }
-
     init();
     return () => realtimeRef.current?.leave();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
+
+  // ===== Polling fallback =====
+  // postgres_changes can fail silently or take a while to propagate.
+  // We poll the leaderboard + participant count every 1.5s while the session
+  // is active so the UI updates reliably regardless of realtime state.
+  useEffect(() => {
+    if (store.phase === "finished") return;
+    const id = setInterval(() => {
+      refreshLeaderboard();
+      refreshParticipants();
+    }, 1500);
+    return () => clearInterval(id);
+  }, [store.phase, refreshLeaderboard, refreshParticipants]);
 
   async function handleStartGame() {
     play("whoosh");
