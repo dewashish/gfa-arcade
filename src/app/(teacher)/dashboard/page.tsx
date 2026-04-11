@@ -1,17 +1,23 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardClient } from "./dashboard-client";
+import type { BankActivity } from "@/lib/bank/types";
+import type { Database } from "@/lib/supabase/types";
+
+type Activity = Database["public"]["Tables"]["activities"]["Row"];
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  // Teacher profile (first name only for hero)
+  // Teacher profile
   const { data: teacher } = await supabase
     .from("teachers")
     .select("name")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   const firstName =
@@ -19,52 +25,104 @@ export default async function DashboardPage() {
       ?.replace(/^(Ms\.?|Mr\.?|Mrs\.?|Dr\.?)\s+/i, "")
       ?.split(" ")[0] ?? "Teacher";
 
-  // Teacher's own activities
-  const { data: activities } = await supabase
+  // Teacher's recent activities (max 3 — this is the "continue where you left off" strip)
+  const { data: recentActivities } = await supabase
     .from("activities")
     .select("*")
-    .eq("teacher_id", user!.id)
+    .eq("teacher_id", user.id)
     .order("updated_at", { ascending: false })
-    .limit(8);
+    .limit(3);
 
-  // Shared activities from other teachers
-  const { data: sharedActivities } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("shared", true)
-    .neq("teacher_id", user!.id)
-    .order("updated_at", { ascending: false })
-    .limit(6);
-
-  // Recent sessions for engagement stats
-  const { data: recentSessions } = await supabase
+  // Recent sessions for the activity strip
+  const { data: rawSessions } = await supabase
     .from("game_sessions")
-    .select("id, started_at, activity_id, activities!inner(teacher_id, title)")
-    .eq("activities.teacher_id", user!.id)
+    .select("id, started_at, activities!inner(teacher_id, title, game_type)")
+    .eq("activities.teacher_id", user.id)
     .order("started_at", { ascending: false })
-    .limit(20);
+    .limit(3);
 
-  // Total students engaged
+  const recentSessionsRaw = (rawSessions ?? []) as unknown as Array<{
+    id: string;
+    started_at: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    activities: any;
+  }>;
+
+  // Hydrate sessions with participant counts and top scorers (single round-trip per session)
+  const recentSessions = await Promise.all(
+    recentSessionsRaw.map(async (s) => {
+      const [{ count: pCount }, { data: top }] = await Promise.all([
+        supabase
+          .from("session_participants")
+          .select("*", { count: "exact", head: true })
+          .eq("session_id", s.id),
+        supabase
+          .from("game_scores")
+          .select("score, students(name, avatar_id)")
+          .eq("session_id", s.id)
+          .order("score", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const stu = (top as any)?.students;
+      return {
+        id: s.id,
+        title: s.activities?.title ?? "Untitled",
+        startedAt: s.started_at,
+        // Pre-formatted server-side (UTC) so hydration can't disagree.
+        dateLabel: new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          timeZone: "UTC",
+        }).format(new Date(s.started_at)),
+        participants: pCount ?? 0,
+        topScorer: stu
+          ? { name: stu.name, avatarId: stu.avatar_id, score: top?.score ?? 0 }
+          : null,
+      };
+    })
+  );
+
+  // KPI numbers
+  const totalSessions = recentSessionsRaw.length;
   let totalStudents = 0;
-  let topScorer: { name: string; score: number; activity: string } | null = null;
-
-  if (recentSessions && recentSessions.length > 0) {
-    const sessionIds = recentSessions.map((s) => s.id);
+  if (recentSessionsRaw.length > 0) {
+    const sessionIds = recentSessionsRaw.map((s) => s.id);
     const { count } = await supabase
       .from("session_participants")
       .select("*", { count: "exact", head: true })
       .in("session_id", sessionIds);
     totalStudents = count ?? 0;
+  }
 
-    // Top scorer across recent sessions (single highest game_score)
+  // Today's Pick — random featured template from the bank
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: templates } = await supabase
+    .from("activities")
+    .select(
+      "id, title, game_type, description, subject, topic, year_level, difficulty, config_json, created_at"
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .eq("is_template" as any, true);
+
+  const templateList = (templates ?? []) as unknown as BankActivity[];
+  const todaysPick =
+    templateList.length > 0
+      ? templateList[Math.floor(Math.random() * templateList.length)]
+      : null;
+
+  // Top scorer across recent sessions
+  let topScorer: { name: string; score: number; activity: string } | null = null;
+  if (recentSessionsRaw.length > 0) {
+    const sessionIds = recentSessionsRaw.map((s) => s.id);
     const { data: highest } = await supabase
       .from("game_scores")
-      .select("score, session_id, students(name), game_sessions(activities(title))")
+      .select("score, students(name), game_sessions(activities(title))")
       .in("session_id", sessionIds)
       .order("score", { ascending: false })
       .limit(1)
       .maybeSingle();
-
     if (highest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const studentName = (highest as any).students?.name ?? "Student";
@@ -80,15 +138,16 @@ export default async function DashboardPage() {
   }
 
   // Engagement % — proportion of last 5 sessions vs target of 5
-  const engagementPct = Math.min(100, Math.round(((recentSessions?.length ?? 0) / 5) * 100));
+  const engagementPct = Math.min(100, Math.round(((recentSessionsRaw?.length ?? 0) / 5) * 100));
 
   return (
     <DashboardClient
       teacherFirstName={firstName}
-      activities={activities ?? []}
-      sharedActivities={sharedActivities ?? []}
-      totalSessions={recentSessions?.length ?? 0}
+      recentActivities={(recentActivities ?? []) as Activity[]}
+      recentSessions={recentSessions}
+      totalSessions={totalSessions}
       totalStudents={totalStudents}
+      todaysPick={todaysPick}
       engagementPct={engagementPct}
       topScorer={topScorer}
     />

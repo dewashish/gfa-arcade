@@ -60,6 +60,15 @@ const GAME_TYPES = [
     color: "#7C5800",
     tag: "Sorting",
   },
+  {
+    slug: "complete-sentence",
+    title: "Complete the Sentence",
+    description: "Drag the right word to fill in the missing blanks.",
+    icon: "text_fields",
+    emoji: "📝",
+    color: "#00629E",
+    tag: "Grammar",
+  },
 ];
 
 const container = {

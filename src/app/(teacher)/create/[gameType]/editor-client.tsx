@@ -243,7 +243,7 @@ export function ActivityEditorClient({ gameType }: Props) {
                 .from("game_sessions")
                 .select("id")
                 .eq("pin_code", pinCode)
-                .single()
+                .maybeSingle()
                 .then(({ data }) => {
                   if (data) router.push(`/session/${data.id}`);
                 });

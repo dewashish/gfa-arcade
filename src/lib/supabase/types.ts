@@ -12,6 +12,8 @@ export type Database = {
           school_name: string;
           avatar_url: string | null;
           created_at: string;
+          classroom: string | null;
+          role: string | null;
         };
         Insert: {
           id: string;
@@ -20,12 +22,16 @@ export type Database = {
           school_name?: string;
           avatar_url?: string | null;
           created_at?: string;
+          classroom?: string | null;
+          role?: string | null;
         };
         Update: {
           email?: string;
           name?: string;
           school_name?: string;
           avatar_url?: string | null;
+          classroom?: string | null;
+          role?: string | null;
         };
         Relationships: [];
       };
@@ -67,6 +73,7 @@ export type Database = {
           max_players: number;
           started_at: string;
           ended_at: string | null;
+          current_question_index: number;
         };
         Insert: {
           id?: string;
@@ -76,10 +83,12 @@ export type Database = {
           max_players?: number;
           started_at?: string;
           ended_at?: string | null;
+          current_question_index?: number;
         };
         Update: {
           status?: "waiting" | "playing" | "finished";
           ended_at?: string | null;
+          current_question_index?: number;
         };
         Relationships: [];
       };
@@ -126,6 +135,7 @@ export type Database = {
           is_correct: boolean;
           time_taken_ms: number;
           answered_at: string;
+          selected_index: number | null;
         };
         Insert: {
           id?: string;
@@ -136,6 +146,7 @@ export type Database = {
           is_correct?: boolean;
           time_taken_ms?: number;
           answered_at?: string;
+          selected_index?: number | null;
         };
         Update: never;
         Relationships: [];

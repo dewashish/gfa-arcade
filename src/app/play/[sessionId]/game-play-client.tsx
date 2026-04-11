@@ -50,10 +50,21 @@ export function GamePlayClient({ sessionId }: Props) {
 
       store.setSession(session.id, session.pin_code);
 
-      const config = session.activities as unknown as { config_json: ActivityConfig };
-      if (config?.config_json) {
-        store.setConfig(config.config_json);
+      const activity = session.activities as unknown as {
+        config_json: ActivityConfig;
+        title: string;
+      };
+      if (activity?.config_json) {
+        store.setConfig(activity.config_json);
       }
+      if (activity?.title) {
+        store.setActivityTitle(activity.title);
+      }
+
+      // Sync to whatever question the teacher has advanced to. Without this,
+      // a student who joins after the teacher clicked "Next" renders question 0
+      // until the next broadcast, skipping the question entirely.
+      store.setCurrentQuestion(session.current_question_index ?? 0);
 
       if (session.status === "playing") {
         store.setPhase("playing");
@@ -109,7 +120,7 @@ export function GamePlayClient({ sessionId }: Props) {
     questionIndex: number,
     isCorrect: boolean,
     timeTakenMs: number,
-    segmentValue?: number
+    opts?: { selectedIndex?: number | null; segmentValue?: number }
   ) {
     if (!store.studentId || !store.config) return;
 
@@ -119,7 +130,7 @@ export function GamePlayClient({ sessionId }: Props) {
       timeTakenMs,
       timeLimitMs: 30000,
       streak: store.myStreak,
-      segmentValue,
+      segmentValue: opts?.segmentValue,
     });
 
     if (isCorrect) {
@@ -130,6 +141,9 @@ export function GamePlayClient({ sessionId }: Props) {
 
     store.addScore(score);
 
+    // selected_index persists what the student actually picked so the
+    // teacher's per-student detail modal (feature 3) can show "picked
+    // option B, correct was option C" instead of just ✓/✗.
     await supabaseRef.current.from("game_scores").insert({
       session_id: sessionId,
       student_id: store.studentId,
@@ -137,6 +151,7 @@ export function GamePlayClient({ sessionId }: Props) {
       question_index: questionIndex,
       is_correct: isCorrect,
       time_taken_ms: timeTakenMs,
+      selected_index: opts?.selectedIndex ?? null,
     });
   }
 
@@ -156,7 +171,9 @@ export function GamePlayClient({ sessionId }: Props) {
           <MatchUp
             config={store.config as MatchUpConfig}
             onAnswer={(pairIndex, correct, timeTakenMs) =>
-              submitScore(pairIndex, correct, timeTakenMs)
+              submitScore(pairIndex, correct, timeTakenMs, {
+                selectedIndex: pairIndex,
+              })
             }
           />
         );
@@ -165,8 +182,8 @@ export function GamePlayClient({ sessionId }: Props) {
           <Quiz
             config={store.config as QuizConfig}
             isTeacher={false}
-            onAnswer={(qi, _selected, correct, timeTakenMs) =>
-              submitScore(qi, correct, timeTakenMs)
+            onAnswer={(qi, selected, correct, timeTakenMs) =>
+              submitScore(qi, correct, timeTakenMs, { selectedIndex: selected })
             }
           />
         );
@@ -178,14 +195,18 @@ export function GamePlayClient({ sessionId }: Props) {
         return (
           <CompleteSentence
             config={store.config as import("@/lib/game-engine/types").CompleteSentenceConfig}
-            onAnswer={(si, correct, timeTakenMs) => submitScore(si, correct, timeTakenMs)}
+            onAnswer={(si, correct, timeTakenMs) =>
+              submitScore(si, correct, timeTakenMs, { selectedIndex: si })
+            }
           />
         );
       case "group-sort":
         return (
           <GroupSort
             config={store.config as import("@/lib/game-engine/types").GroupSortConfig}
-            onAnswer={(ii, correct, timeTakenMs) => submitScore(ii, correct, timeTakenMs)}
+            onAnswer={(ii, correct, timeTakenMs) =>
+              submitScore(ii, correct, timeTakenMs, { selectedIndex: ii })
+            }
           />
         );
       default:

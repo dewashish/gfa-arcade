@@ -31,10 +31,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protect teacher routes — redirect to login if not authenticated
+  const path = request.nextUrl.pathname;
   const isProtected =
-    request.nextUrl.pathname.startsWith("/dashboard") ||
-    request.nextUrl.pathname.startsWith("/create") ||
-    request.nextUrl.pathname.startsWith("/session");
+    path.startsWith("/dashboard") ||
+    path.startsWith("/create") ||
+    path.startsWith("/session") ||
+    path.startsWith("/library") ||
+    path.startsWith("/bank") ||
+    path.startsWith("/reports") ||
+    path.startsWith("/settings");
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatTeacherRole } from "@/lib/teacher-role";
 import { TeacherLayoutClient } from "./layout-client";
 
 export default async function TeacherLayout({
@@ -27,6 +28,7 @@ export default async function TeacherLayout({
     <TeacherLayoutClient
       teacherName={teacher?.name ?? user.email?.split("@")[0] ?? "Teacher"}
       teacherEmail={user.email ?? ""}
+      teacherRole={formatTeacherRole(teacher?.role)}
     >
       {children}
     </TeacherLayoutClient>

@@ -4,6 +4,7 @@ import type { GameEvent } from "./types";
 
 export class RealtimeManager {
   private channel: RealtimeChannel | null = null;
+  private subscribed = false;
 
   constructor(private supabase: SupabaseClient<Database>) {}
 
@@ -12,16 +13,29 @@ export class RealtimeManager {
     onEvent: (event: GameEvent) => void,
     onLeaderboardChange?: (payload: unknown) => void
   ) {
-    // Broadcast channel for game events
-    this.channel = this.supabase
-      .channel(`game:${sessionId}`)
+    // Idempotent: bail if this manager already subscribed
+    if (this.subscribed) return this;
+
+    const channelName = `game:${sessionId}`;
+
+    // CRITICAL: supabase.channel(name) returns the *existing* channel if one
+    // with that name already exists. In React Strict Mode (dev) useEffect runs
+    // twice, so the previous mount may have left a subscribed channel behind.
+    // Force-remove any existing channel with this name before creating a fresh one.
+    const existing = this.supabase.getChannels().find((c) => c.topic === `realtime:${channelName}`);
+    if (existing) {
+      this.supabase.removeChannel(existing);
+    }
+
+    // Build a fresh channel with all bindings registered BEFORE subscribe()
+    let channel = this.supabase
+      .channel(channelName)
       .on("broadcast", { event: "game_event" }, (payload) => {
         onEvent(payload.payload as GameEvent);
       });
 
-    // Subscribe to leaderboard changes via postgres_changes
     if (onLeaderboardChange) {
-      this.channel = this.channel.on(
+      channel = channel.on(
         "postgres_changes",
         {
           event: "*",
@@ -33,7 +47,9 @@ export class RealtimeManager {
       );
     }
 
-    this.channel.subscribe();
+    channel.subscribe();
+    this.channel = channel;
+    this.subscribed = true;
     return this;
   }
 
@@ -50,6 +66,7 @@ export class RealtimeManager {
     if (this.channel) {
       this.supabase.removeChannel(this.channel);
       this.channel = null;
+      this.subscribed = false;
     }
   }
 }
