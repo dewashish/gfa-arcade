@@ -42,6 +42,7 @@ export default function LoginPage() {
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // 3D tilt state — tracks mouse over the card and applies rotateX/Y
   const cardRef = useRef<HTMLDivElement>(null);
@@ -83,7 +84,9 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     const supabase = createClient();
-    const { error: err } = await supabase.auth.signUp({
+
+    // Race the signup against a 15s timeout so we never hang forever.
+    const signupPromise = supabase.auth.signUp({
       email,
       password,
       options: {
@@ -94,6 +97,28 @@ export default function LoginPage() {
         },
       },
     });
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "Signup is taking longer than expected — check your network and try again."
+            )
+          ),
+        15000
+      )
+    );
+
+    let result;
+    try {
+      result = await Promise.race([signupPromise, timeoutPromise]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign up failed.");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error: err } = result;
     if (err) {
       setError(err.message);
       setLoading(false);
@@ -101,6 +126,25 @@ export default function LoginPage() {
       setSignupStep("credentials");
       return;
     }
+
+    // If Supabase has "Confirm email" enabled, signUp succeeds but
+    // session is null — the user has to click a confirmation link in
+    // the email before they can log in. Surface that clearly instead
+    // of trying to navigate to /dashboard (which would just bounce
+    // them back to /login and trap the loader).
+    if (!data.session) {
+      setLoading(false);
+      setSuccess(
+        `Account created! We sent a confirmation link to ${email}. Click it, then come back and sign in.`
+      );
+      // Pre-fill the sign-in form and switch modes
+      setMode("signin");
+      setSignupStep("credentials");
+      return;
+    }
+
+    // Confirmed account — navigate
+    setLoading(false);
     router.push("/dashboard");
     router.refresh();
   }
@@ -295,6 +339,8 @@ export default function LoginPage() {
                 <p className="text-on-surface-variant text-center font-body">
                   Log in to start your adventure
                 </p>
+
+                {success && <SuccessBanner message={success} />}
 
                 <FieldInput
                   label="Email"
@@ -584,6 +630,26 @@ function ErrorBanner({ message }: { message: string }) {
         error
       </span>
       <p className="text-sm font-body font-bold flex-1">{message}</p>
+    </motion.div>
+  );
+}
+
+function SuccessBanner({ message }: { message: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      role="status"
+      className="bg-tertiary-container/30 text-tertiary border-2 border-tertiary/30 rounded-2xl p-4 flex items-start gap-3"
+    >
+      <span
+        className="material-symbols-outlined shrink-0"
+        style={{ fontVariationSettings: "'FILL' 1" }}
+        aria-hidden="true"
+      >
+        mark_email_read
+      </span>
+      <p className="text-sm font-body font-bold flex-1 leading-relaxed">{message}</p>
     </motion.div>
   );
 }
