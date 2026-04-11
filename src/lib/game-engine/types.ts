@@ -13,6 +13,8 @@ export type SpinWheelConfig = {
     value: number;
     color?: string;
     special?: "x2" | "bankrupt";
+    /** Optional emoji to render in the segment (decorative). */
+    emoji?: string;
   }>;
   rounds: number;
 };
@@ -23,6 +25,9 @@ export type MatchUpConfig = {
     term: string;
     definition: string;
     image_url?: string;
+    /** Optional emoji rendered inside the term card to make pairs
+     *  more visually distinct for Year 1 readers. */
+    emoji?: string;
   }>;
   time_limit_seconds?: number;
 };
@@ -149,6 +154,9 @@ export type FlashCardsConfig = {
     front: string;
     back: string;
     image_url?: string;
+    /** Optional emoji rendered on the front of the card alongside
+     *  the text — gives Year 1 readers a visual anchor. */
+    emoji?: string;
   }>;
 };
 
@@ -177,7 +185,13 @@ export type GroupSortConfig = {
   groups: Array<{
     name: string;
     items: string[];
+    /** Optional emoji to render as the bucket icon. */
+    emoji?: string;
   }>;
+  /** Optional map of item text → emoji for decorating draggable items.
+   *  Kept as a parallel map so legacy string-only item arrays stay
+   *  compatible with the existing seeded activities. */
+  itemIcons?: Record<string, string>;
   time_limit_seconds?: number;
 };
 
