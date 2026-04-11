@@ -11,12 +11,31 @@ interface Props {
   email: string;
   initialName: string;
   initialSchool: string;
+  initialClassroom: string;
+  initialRole: string;
 }
 
-export function SettingsClient({ email, initialName, initialSchool }: Props) {
+const ROLE_OPTIONS = [
+  { value: "class_teacher", label: "Class Teacher" },
+  { value: "assistant_teacher", label: "Assistant Teacher" },
+  { value: "teaching_assistant", label: "Teaching Assistant" },
+  { value: "specialist", label: "Specialist" },
+  { value: "head_of_year", label: "Head of Year" },
+  { value: "other", label: "Other" },
+];
+
+export function SettingsClient({
+  email,
+  initialName,
+  initialSchool,
+  initialClassroom,
+  initialRole,
+}: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [schoolName, setSchoolName] = useState(initialSchool);
+  const [classroom, setClassroom] = useState(initialClassroom);
+  const [role, setRole] = useState(initialRole);
   const [savingProfile, setSavingProfile] = useState(false);
   const [saved, setSaved] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -33,7 +52,8 @@ export function SettingsClient({ email, initialName, initialSchool }: Props) {
       if (!user) return;
       await supabase
         .from("teachers")
-        .update({ name, school_name: schoolName })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update({ name, school_name: schoolName, classroom, role } as any)
         .eq("id", user.id);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -108,6 +128,45 @@ export function SettingsClient({ email, initialName, initialSchool }: Props) {
               autoComplete="organization"
               className="focus-ring w-full h-12 px-4 rounded-2xl bg-surface-container-low border-none focus:bg-surface-container-lowest text-on-surface font-body outline-none transition-colors"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="classroom"
+              className="text-xs uppercase tracking-widest font-bold text-on-surface-variant block"
+            >
+              Classroom
+            </label>
+            <input
+              id="classroom"
+              type="text"
+              value={classroom}
+              onChange={(e) => setClassroom(e.target.value)}
+              placeholder="Discovery Class · Year 1B · Sunshine Room"
+              className="focus-ring w-full h-12 px-4 rounded-2xl bg-surface-container-low border-none focus:bg-surface-container-lowest text-on-surface font-body outline-none transition-colors"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="role"
+              className="text-xs uppercase tracking-widest font-bold text-on-surface-variant block"
+            >
+              Role
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="focus-ring w-full h-12 px-4 rounded-2xl bg-surface-container-low border-none focus:bg-surface-container-lowest text-on-surface font-body outline-none transition-colors"
+            >
+              <option value="">Pick a role…</option>
+              {ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex items-center gap-3 pt-2">

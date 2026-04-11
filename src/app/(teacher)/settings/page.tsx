@@ -9,17 +9,24 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: teacher } = await supabase
+  // Use any cast because supabase auto-types don't yet know about
+  // the classroom + role columns added by supabase-teacher-profile.sql
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: teacherRaw } = await (supabase
     .from("teachers")
-    .select("name, school_name")
+    .select("*")
     .eq("id", user.id)
-    .single();
+    .single() as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teacher = teacherRaw as any;
 
   return (
     <SettingsClient
       email={user.email ?? ""}
       initialName={teacher?.name ?? ""}
       initialSchool={teacher?.school_name ?? "GEMS Founders School"}
+      initialClassroom={teacher?.classroom ?? ""}
+      initialRole={teacher?.role ?? ""}
     />
   );
 }
