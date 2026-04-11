@@ -16,9 +16,25 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "GFA Arcade — Adventure Hub",
+  title: {
+    default: "Founders Arcade",
+    template: "%s · Founders Arcade",
+  },
   description:
-    "Interactive classroom games for GEMS Founders School, Masdar City",
+    "Founders Arcade — the interactive classroom games portal for GEMS Founders School, Masdar City Campus.",
+  applicationName: "Founders Arcade",
+  appleWebApp: {
+    title: "Founders Arcade",
+    capable: true,
+    statusBarStyle: "default",
+  },
+  openGraph: {
+    title: "Founders Arcade",
+    description:
+      "Interactive classroom games for GEMS Founders School, Masdar City Campus.",
+    siteName: "Founders Arcade",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
