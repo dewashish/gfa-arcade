@@ -74,6 +74,7 @@ export type Database = {
           started_at: string;
           ended_at: string | null;
           current_question_index: number;
+          teacher_id: string | null;
         };
         Insert: {
           id?: string;
@@ -84,11 +85,13 @@ export type Database = {
           started_at?: string;
           ended_at?: string | null;
           current_question_index?: number;
+          teacher_id?: string | null;
         };
         Update: {
           status?: "waiting" | "playing" | "finished";
           ended_at?: string | null;
           current_question_index?: number;
+          teacher_id?: string | null;
         };
         Relationships: [];
       };

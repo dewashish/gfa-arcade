@@ -33,11 +33,15 @@ export default async function DashboardPage() {
     .order("updated_at", { ascending: false })
     .limit(3);
 
-  // Recent sessions for the activity strip
+  // Recent sessions for the activity strip. Filter by game_sessions.teacher_id
+  // (populated by createGameSession) so this works for template-launched
+  // sessions too — the old activities!inner filter only surfaced sessions
+  // pointing at teacher-owned activities and hid everything launched from
+  // the bank.
   const { data: rawSessions } = await supabase
     .from("game_sessions")
-    .select("id, started_at, activities!inner(teacher_id, title, game_type)")
-    .eq("activities.teacher_id", user.id)
+    .select("id, started_at, activities(title, game_type)")
+    .eq("teacher_id", user.id)
     .order("started_at", { ascending: false })
     .limit(3);
 
