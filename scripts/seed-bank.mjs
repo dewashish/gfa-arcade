@@ -2,9 +2,10 @@
 /**
  * Activity Bank seeder for GFA Arcade.
  *
- * Inserts 31 ready-made Year 1 British curriculum activities into the
+ * Inserts 34 ready-made Year 1 British curriculum activities into the
  * `activities` table with `is_template = true, teacher_id = null`.
- * (25 original + 6 visual-rich quizzes added 2026-04-11.)
+ * (25 original + 6 visual-rich deep-dive quizzes + 3 mixed-topic
+ * review quizzes added 2026-04-11.)
  *
  * Subjects: Maths, Phonics, Science, Geography, History, PSHE.
  * Game types: Quiz, Match Up, Flash Cards, Spin Wheel, Group Sort.
@@ -703,6 +704,110 @@ const ACTIVITIES = [
         { q: "Will the magnet stick to this metal fork?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "fork" } },
         { q: "Is a rubber eraser magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "eraser" } },
         { q: "Will a magnet stick to a copper coin?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "coin" } },
+      ],
+      25
+    ),
+  },
+
+  // ============================================================
+  // ========== MIXED-TOPIC REVIEW QUIZZES (2026-04-11) =========
+  // ============================================================
+  // Three review quizzes that span multiple topics within their
+  // subject, using the existing visual primitives. Added alongside
+  // the single-topic deep-dive quizzes (not replacing them).
+
+  // ---- Maths: Halves & Quarters Mix ---------------------------
+  // Rotates between half-of-a-shape (Yes/No), find-half-of-quantity
+  // (numeric), recognise-half-of-quantity (Yes/No with divider), and
+  // recognise-a-quarter (Yes/No on shape quarters).
+  {
+    title: "🧩 Halves & Quarters Mix",
+    subject: "maths",
+    topic: "Fractions review — halves and quarters across shapes and quantities",
+    description: "A mixed review quiz that hops between halving shapes, halving quantities, and spotting quarters.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Is this circle split into two equal halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "circle", pattern: "half-v" } },
+        { q: "What is half of 8?", options: ["2", "3", "4", "5"], correct: "4", visual: { kind: "counted-objects", object: "apple", count: 8 } },
+        { q: "Is this pizza cut into quarters?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "quarter" } },
+        { q: "Is 5 half of 10?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "star", count: 10, divider: 5 } },
+        { q: "Is this square split into two equal halves?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "square", pattern: "uneven-2" } },
+        { q: "What is half of 6?", options: ["2", "3", "4", "5"], correct: "3", visual: { kind: "counted-objects", object: "smile", count: 6 } },
+        { q: "Is this rectangle cut into quarters?", options: ["Yes", "No"], correct: "No", visual: { kind: "shape-fraction", shape: "rectangle", pattern: "half-h" } },
+        { q: "Is 4 half of 12?", options: ["Yes", "No"], correct: "No", visual: { kind: "counted-objects", object: "cookie", count: 12, divider: 4 } },
+        { q: "Is this pizza split into halves?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "pizza", pattern: "half-v" } },
+        { q: "What is half of 10?", options: ["3", "4", "5", "6"], correct: "5", visual: { kind: "counted-objects", object: "heart", count: 10 } },
+        { q: "Is this square split into 4 equal quarters?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "square", pattern: "quarter" } },
+        { q: "Is 4 half of 8?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "counted-objects", object: "apple", count: 8, divider: 4 } },
+        { q: "Is this chocolate bar split in half?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "half-v" } },
+        { q: "What is half of 4?", options: ["1", "2", "3", "4"], correct: "2", visual: { kind: "counted-objects", object: "balloon", count: 4 } },
+        { q: "Is this chocolate split into 4 equal quarters?", options: ["Yes", "No"], correct: "Yes", visual: { kind: "shape-fraction", shape: "chocolate", pattern: "quarter" } },
+      ],
+      30
+    ),
+  },
+
+  // ---- Phonics: Sound Review (Phase 3 digraphs mix) ----------
+  // Mixes oy/ir/ue/aw with sh/ch/th so the student has to recognise
+  // the special sound across multiple phonics phases. Each question
+  // shows the illustrated word; student picks from 4 plausible sounds.
+  {
+    title: "🎵 Phonics Sound Review",
+    subject: "phonics",
+    topic: "Phase 3 digraph sounds — mixed oy ir ue aw sh ch th",
+    description: "A mixed review quiz. Listen for the special sound in each word and pick the matching digraph.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Which sound is in this word?", options: ["sh", "ch", "th", "oy"], correct: "sh", visual: { kind: "phonics-word", word: "fish", illustration: "fish" } },
+        { q: "Which sound is in this word?", options: ["oy", "ir", "ue", "aw"], correct: "oy", visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
+        { q: "Which sound is in this word?", options: ["ch", "sh", "th", "ir"], correct: "ch", visual: { kind: "phonics-word", word: "chair", illustration: "chair" } },
+        { q: "Which sound is in this word?", options: ["ir", "ue", "oy", "sh"], correct: "ir", visual: { kind: "phonics-word", word: "bird", illustration: "bird" } },
+        { q: "Which sound is in this word?", options: ["th", "ch", "sh", "aw"], correct: "th", visual: { kind: "phonics-word", word: "thumb", illustration: "thumb" } },
+        { q: "Which sound is in this word?", options: ["ue", "oy", "ir", "th"], correct: "ue", visual: { kind: "phonics-word", word: "blue", illustration: "blue" } },
+        { q: "Which sound is in this word?", options: ["sh", "ch", "ir", "ue"], correct: "sh", visual: { kind: "phonics-word", word: "ship", illustration: "ship" } },
+        { q: "Which sound is in this word?", options: ["aw", "oy", "ir", "sh"], correct: "aw", visual: { kind: "phonics-word", word: "saw", illustration: "saw" } },
+        { q: "Which sound is in this word?", options: ["ch", "sh", "th", "oy"], correct: "ch", visual: { kind: "phonics-word", word: "chip", illustration: "chip" } },
+        { q: "Which sound is in this word?", options: ["ir", "oy", "aw", "ch"], correct: "ir", visual: { kind: "phonics-word", word: "girl", illustration: "girl" } },
+        { q: "Which sound is in this word?", options: ["th", "sh", "ch", "ue"], correct: "th", visual: { kind: "phonics-word", word: "bath", illustration: "bath" } },
+        { q: "Which sound is in this word?", options: ["ue", "ir", "oy", "sh"], correct: "ue", visual: { kind: "phonics-word", word: "glue", illustration: "glue" } },
+        { q: "Which sound is in this word?", options: ["ch", "sh", "th", "aw"], correct: "ch", visual: { kind: "phonics-word", word: "cherry", illustration: "cherry" } },
+        { q: "Which sound is in this word?", options: ["aw", "oy", "ir", "ue"], correct: "aw", visual: { kind: "phonics-word", word: "straw", illustration: "straw" } },
+        { q: "Which sound is in this word?", options: ["th", "sh", "ch", "oy"], correct: "th", visual: { kind: "phonics-word", word: "moth", illustration: "moth" } },
+      ],
+      30
+    ),
+  },
+
+  // ---- Science: Year 1 Review ---------------------------------
+  // Hops across magnets, animals, plants, body parts, and
+  // living/non-living. The magnet questions carry the full
+  // magnet-object visual; the other questions are text + emoji
+  // (matching the other existing science quizzes' style).
+  {
+    title: "🔬 Year 1 Science Review",
+    subject: "science",
+    topic: "Science review — magnets, animals, plants, body, living/non-living",
+    description: "A mixed review covering everything we know about magnets, living things and our bodies.",
+    difficulty: "easy",
+    config: quiz(
+      [
+        { q: "Will the magnet stick to this metal fork?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "fork" } },
+        { q: "Which animal is a mammal? 🐱🐟🐦🦎", options: ["cat", "fish", "bird", "lizard"], correct: "cat" },
+        { q: "What do plants need to grow? 🌱", options: ["darkness", "water", "candy", "toys"], correct: "water" },
+        { q: "Is a plastic toy magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "plastic-toy" } },
+        { q: "Which of these is alive?", options: ["tree 🌳", "rock 🪨", "book 📚", "chair 🪑"], correct: "tree 🌳" },
+        { q: "How many legs does a spider have? 🕷️", options: ["4", "6", "8", "10"], correct: "8" },
+        { q: "Will a magnet stick to a copper coin?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "coin" } },
+        { q: "Which body part helps you hear? 👂", options: ["eyes", "ears", "nose", "hand"], correct: "ears" },
+        { q: "What do flowers make to grow into new plants? 🌸", options: ["leaves", "seeds", "ice", "candy"], correct: "seeds" },
+        { q: "Is an iron nail magnetic?", options: ["Magnetic", "Not magnetic"], correct: "Magnetic", visual: { kind: "magnet-object", object: "nail" } },
+        { q: "Which of these is NOT living? 🪨", options: ["fish", "plant", "rock", "bird"], correct: "rock" },
+        { q: "Which sense do you use to smell? 👃", options: ["sight", "hearing", "taste", "smell"], correct: "smell" },
+        { q: "Does a magnet stick to a wooden block?", options: ["Magnetic", "Not magnetic"], correct: "Not magnetic", visual: { kind: "magnet-object", object: "wood-block" } },
+        { q: "A baby sheep is called a…? 🐑", options: ["chick", "lamb", "calf", "cub"], correct: "lamb" },
+        { q: "Which of these is a reptile?", options: ["cat", "frog", "snake 🐍", "fish"], correct: "snake 🐍" },
       ],
       25
     ),

@@ -119,7 +119,16 @@ export type QuestionVisual =
         | "saw"
         | "straw"
         | "paw"
-        | "yawn";
+        | "yawn"
+        // sh / ch / th digraph illustrations (added for mixed phonics review)
+        | "fish"
+        | "ship"
+        | "chip"
+        | "chair"
+        | "cherry"
+        | "thumb"
+        | "moth"
+        | "bath";
     };
 
 export type QuizConfig = {
