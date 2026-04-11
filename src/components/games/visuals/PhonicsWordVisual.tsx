@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
  */
 
 const ILLUSTRATIONS: Record<string, string> = {
+  // oy / ir / ue / aw (Phase 3 digraphs — single-topic quiz)
   boy: "👦",
   toy: "🧸",
   coin: "🪙",
@@ -30,6 +31,15 @@ const ILLUSTRATIONS: Record<string, string> = {
   straw: "🥤",
   paw: "🐾",
   yawn: "😮",
+  // sh / ch / th (for mixed phonics review quiz)
+  fish: "🐟",
+  ship: "🚢",
+  chip: "🍟",
+  chair: "🪑",
+  cherry: "🍒",
+  thumb: "👍",
+  moth: "🦋",
+  bath: "🛁",
 };
 
 interface Props {
