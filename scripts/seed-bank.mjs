@@ -940,122 +940,137 @@ const ACTIVITIES = [
   },
   // ============== PHONICS — oy SOUND (6) ==============
 
-  // 1. Quiz: Spot the 'oy' Sound
+  // 1. Quiz: The 'oy' Sound Detective
   {
-    title: "👦 Spot the 'oy' Sound",
+    title: "🔍 The 'oy' Sound Detective",
     subject: "phonics",
     topic: "oy sound",
-    description: "Can you find the words with the 'oy' sound?",
-    difficulty: "foundation",
+    description: "Find, build, and rhyme with 'oy' words — 12 tricky questions!",
+    difficulty: "developing",
     config: quiz([
-      { q: "Which word has the 'oy' sound?", options: ["boy", "bird", "blue", "bath"], correct: "boy", visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
-      { q: "Which word has the 'oy' sound?", options: ["toy", "paw", "shirt", "glue"], correct: "toy", visual: { kind: "phonics-word", word: "toy", illustration: "toy" } },
-      { q: "Which word has the 'oy' sound?", options: ["straw", "coin", "skirt", "moth"], correct: "coin", visual: { kind: "phonics-word", word: "coin", illustration: "coin" } },
-      { q: "Which word has the 'oy' sound?", options: ["oil", "fish", "cherry", "thumb"], correct: "oil", visual: { kind: "phonics-word", word: "oil", illustration: "oil" } },
-      { q: "Which word does NOT have the 'oy' sound?", options: ["bird", "boy", "toy", "joy"], correct: "bird" },
-      { q: "Which word does NOT have the 'oy' sound?", options: ["royal", "enjoy", "annoy", "straw"], correct: "straw" },
-      { q: "Fill in: b___", options: ["oy", "ay", "aw", "ir"], correct: "oy" },
-      { q: "Fill in: enj___", options: ["oy", "oi", "ey", "ay"], correct: "oy" },
-      { q: "Fill in: r___al", options: ["oy", "oi", "ay", "ea"], correct: "oy" },
-      { q: "Fill in: ann___", options: ["oy", "oi", "ey", "ay"], correct: "oy" },
+      // Picture-based identification
+      { q: "This is a young child. What word is it?", options: ["boy", "bay", "buy", "bee"], correct: "boy", visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
+      { q: "You play with this. What is it?", options: ["toy", "toe", "tea", "tie"], correct: "toy", visual: { kind: "phonics-word", word: "toy", illustration: "toy" } },
+      // Word building
+      { q: "Which beginning + 'oy' makes a real word?", options: ["b + oy = boy", "m + oy = moy", "p + oy = poy", "z + oy = zoy"], correct: "b + oy = boy" },
+      { q: "Which beginning + 'oy' makes a real word?", options: ["t + oy = toy", "g + oy = goy", "w + oy = woy", "f + oy = foy"], correct: "t + oy = toy" },
+      // Rhyming
+      { q: "Which word rhymes with 'toy'?", options: ["boy", "big", "bat", "bus"], correct: "boy" },
+      { q: "Which word rhymes with 'joy'?", options: ["Roy", "run", "red", "rug"], correct: "Roy" },
+      // Real vs nonsense
+      { q: "Which is a REAL word?", options: ["enjoy", "enjay", "enjir", "enjaw"], correct: "enjoy" },
+      { q: "Which is a REAL word?", options: ["annoy", "annir", "annaw", "annue"], correct: "annoy" },
+      // Sound position
+      { q: "Where is 'oy' in the word 'enjoy'?", options: ["At the end", "At the start", "In the middle", "It's not there"], correct: "At the end" },
+      { q: "Where is 'oy' in the word 'royal'?", options: ["In the middle", "At the end", "At the start", "It's not there"], correct: "In the middle" },
+      // Counting oy words
+      { q: "How many 'oy' words are here: boy, cat, toy, dog?", options: ["2", "1", "3", "4"], correct: "2" },
+      { q: "How many 'oy' words: joy, run, royal, bat, annoy?", options: ["3", "2", "4", "1"], correct: "3" },
     ], 25),
   },
 
-  // 2. MatchUp: Match 'oy' Words to Meanings
+  // 2. MatchUp: oy Word Pairs
   {
-    title: "🔗 Match 'oy' Words to Meanings",
+    title: "🔗 'oy' Word Pairs",
     subject: "phonics",
     topic: "oy sound",
-    description: "Drag each 'oy' word to its meaning!",
+    description: "Drag each 'oy' word to its picture clue!",
     difficulty: "foundation",
     config: matchUp([
-      { term: "boy", definition: "A young male person", emoji: "👦" },
-      { term: "toy", definition: "Something you play with", emoji: "🧸" },
-      { term: "joy", definition: "A feeling of happiness", emoji: "😊" },
-      { term: "royal", definition: "Belonging to a king or queen", emoji: "👑" },
-      { term: "enjoy", definition: "To have fun doing something", emoji: "🎉" },
-      { term: "annoy", definition: "To bother or irritate someone", emoji: "😤" },
-      { term: "destroy", definition: "To break something completely", emoji: "💥" },
-      { term: "cowboy", definition: "A person who rides horses", emoji: "🤠" },
+      { term: "boy", definition: "👦 A child waving hello", emoji: "👦" },
+      { term: "toy", definition: "🧸 Something in a toy box", emoji: "🧸" },
+      { term: "coin", definition: "🪙 Round and shiny, worth money", emoji: "🪙" },
+      { term: "royal", definition: "👑 A king's golden crown", emoji: "👑" },
+      { term: "cowboy", definition: "🤠 Rides horses, wears a hat", emoji: "🤠" },
+      { term: "joy", definition: "😊 A big happy smile", emoji: "😊" },
+      { term: "oyster", definition: "🦪 Lives in a shell at the beach", emoji: "🦪" },
+      { term: "annoy", definition: "😤 When someone bothers you", emoji: "😤" },
     ], 90),
   },
 
-  // 3. GroupSort: Sort oy vs oi
+  // 3. GroupSort: oy or oi — Same Sound, Different Spelling
   {
-    title: "🗂️ Sort the Sounds: oy vs oi",
+    title: "🗂️ oy or oi? Same Sound, Different Spelling!",
     subject: "phonics",
     topic: "oy sound",
-    description: "Drag each word into the correct sound bucket!",
-    difficulty: "foundation",
+    description: "'oy' goes at the END, 'oi' goes in the MIDDLE. Sort the words!",
+    difficulty: "developing",
     config: groupSort([
-      { name: "oy words", items: ["boy", "toy", "joy", "cowboy", "enjoy", "annoy"], emoji: "👦" },
-      { name: "oi words", items: ["oil", "coin", "soil", "foil", "coil", "join"], emoji: "🪙" },
-    ], 90),
+      { name: "oy (end of word)", items: ["boy", "toy", "joy", "enjoy", "annoy", "royal", "destroy"], emoji: "👦" },
+      { name: "oi (middle of word)", items: ["oil", "coin", "soil", "foil", "join", "point", "noise"], emoji: "🪙" },
+    ], 120),
   },
 
-  // 4. CompleteSentence: Fill in the 'oy' Words
+  // 4. CompleteSentence: 'oy' Words in Action
   {
-    title: "📝 Fill in the 'oy' Words",
+    title: "📝 'oy' Words in Action",
     subject: "phonics",
     topic: "oy sound",
-    description: "Drag the right 'oy' word into each sentence!",
+    description: "Drag the correct 'oy' word into each sentence!",
     difficulty: "developing",
     config: completeSentence([
-      { text: "I really ___ eating pizza.", blanks: [{ position: 0, answer: "enjoy", distractors: ["annoy", "destroy", "royal"] }] },
-      { text: "The ___ like to play soccer.", blanks: [{ position: 0, answer: "boys", distractors: ["toys", "joys", "coins"] }] },
-      { text: "The king and queen are ___.", blanks: [{ position: 0, answer: "royal", distractors: ["loyal", "annoy", "enjoy"] }] },
-      { text: "Tami found an ___ on the beach.", blanks: [{ position: 0, answer: "oyster", distractors: ["annoy", "destroy", "loyal"] }] },
-      { text: "The ___ rides a horse in the rodeo.", blanks: [{ position: 0, answer: "cowboy", distractors: ["boy", "toy", "joy"] }] },
-      { text: "Do not ___ your sister!", blanks: [{ position: 0, answer: "annoy", distractors: ["enjoy", "destroy", "employ"] }] },
+      { text: "The ___ played with his new ___.", blanks: [{ position: 0, answer: "boy", distractors: ["joy"] }, { position: 1, answer: "toy", distractors: ["coin"] }] },
+      { text: "I ___ going to the park with my friends.", blanks: [{ position: 0, answer: "enjoy", distractors: ["annoy", "destroy", "royal"] }] },
+      { text: "The ___ wore a big hat and rode a horse.", blanks: [{ position: 0, answer: "cowboy", distractors: ["royal", "loyal", "annoy"] }] },
+      { text: "Please do not ___ your little brother.", blanks: [{ position: 0, answer: "annoy", distractors: ["enjoy", "destroy", "royal"] }] },
+      { text: "She jumped for ___ when she won the prize.", blanks: [{ position: 0, answer: "joy", distractors: ["toy", "boy", "coin"] }] },
+      { text: "The king lives in a ___ palace.", blanks: [{ position: 0, answer: "royal", distractors: ["loyal", "annoy", "enjoy"] }] },
+      { text: "A ___ friend always stands by you.", blanks: [{ position: 0, answer: "loyal", distractors: ["royal", "annoy", "destroy"] }] },
+      { text: "We found a shiny ___ on the beach.", blanks: [{ position: 0, answer: "coin", distractors: ["boy", "toy", "joy"] }] },
     ]),
   },
 
-  // 5. FlashCards: 'oy' Word Builder
+  // 5. FlashCards: Learn the 'oy' Family
   {
-    title: "🃏 'oy' Word Builder",
+    title: "🃏 Learn the 'oy' Family",
     subject: "phonics",
     topic: "oy sound",
-    description: "Flip through 'oy' words — learn meanings and examples!",
+    description: "Flip the cards to learn 'oy' words, meanings, and sentences!",
     difficulty: "foundation",
     config: flashCards([
-      { front: "boy", back: "A young male person. The boy plays football.", emoji: "👦" },
-      { front: "toy", back: "Something to play with. I got a new toy!", emoji: "🧸" },
-      { front: "joy", back: "Great happiness. She jumped for joy!", emoji: "😊" },
-      { front: "enjoy", back: "To have fun. I enjoy reading books.", emoji: "🎉" },
-      { front: "annoy", back: "To bother someone. Don't annoy the cat!", emoji: "😤" },
-      { front: "royal", back: "Like a king or queen. The royal palace is big.", emoji: "👑" },
-      { front: "loyal", back: "Always faithful. A loyal friend stays with you.", emoji: "🤝" },
-      { front: "destroy", back: "To break completely. The storm will destroy the shed.", emoji: "💥" },
-      { front: "cowboy", back: "Rides horses on a ranch. The cowboy wore a hat.", emoji: "🤠" },
-      { front: "oyster", back: "A shellfish from the sea. We found an oyster!", emoji: "🦪" },
+      { front: "b-oy", back: "A young male person.\n'The boy kicked the ball.'", emoji: "👦" },
+      { front: "t-oy", back: "Something you play with.\n'My favourite toy is a teddy bear.'", emoji: "🧸" },
+      { front: "j-oy", back: "A feeling of great happiness.\n'She jumped for joy!'", emoji: "😊" },
+      { front: "enj-oy", back: "To have fun doing something.\n'I enjoy reading books.'", emoji: "🎉" },
+      { front: "ann-oy", back: "To bother or irritate someone.\n'Please don't annoy the cat!'", emoji: "😤" },
+      { front: "r-oy-al", back: "Like a king or queen.\n'The royal family lives in a palace.'", emoji: "👑" },
+      { front: "l-oy-al", back: "Always faithful and true.\n'A loyal friend stays with you.'", emoji: "🤝" },
+      { front: "destr-oy", back: "To break something completely.\n'The wrecking ball will destroy the building.'", emoji: "💥" },
+      { front: "cowb-oy", back: "A person who rides horses on a ranch.\n'The cowboy wore a big hat.'", emoji: "🤠" },
+      { front: "oyster", back: "A shellfish that lives in the sea.\n'We found an oyster on the beach!'", emoji: "🦪" },
     ]),
   },
 
-  // 6. Quiz: oy Sound Mix & Match Challenge
+  // 6. Quiz: 'oy' Sound Challenge Mix
   {
-    title: "🎯 oy Sound Mix & Match Challenge",
+    title: "🎯 'oy' Sound Challenge Mix",
     subject: "phonics",
     topic: "oy sound",
-    description: "A mixed quiz with word spotting, fill-the-gap, odd-one-out, and silly questions!",
+    description: "15 mixed questions — odd one out, rhymes, syllables, sentences, and more!",
     difficulty: "developing",
     config: quiz([
-      // Style A — Spot the sound
-      { q: "Which word has the 'oy' sound?", options: ["boy", "bird", "blue", "bath"], correct: "boy", visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
-      { q: "Which word has the 'oy' sound?", options: ["coin", "girl", "paw", "glue"], correct: "coin", visual: { kind: "phonics-word", word: "coin", illustration: "coin" } },
-      // Style B — Complete the word
-      { q: "Fill in the missing letters: b___", options: ["oy", "ay", "aw", "ir"], correct: "oy" },
-      { q: "Fill in the missing letters: enj___", options: ["oy", "oi", "ey", "ay"], correct: "oy" },
-      { q: "Fill in the missing letters: r___al", options: ["oy", "oi", "ay", "ea"], correct: "oy" },
-      // Style C — Odd one out
-      { q: "Which word does NOT have the 'oy' sound?", options: ["oil", "boy", "toy", "joy"], correct: "oil" },
-      { q: "Which word does NOT have the 'oy' sound?", options: ["bird", "royal", "enjoy", "annoy"], correct: "bird" },
-      // Style D — Silly questions
-      { q: "Can a cowboy annoy a toy?", options: ["Yes!", "No way", "Maybe", "Only on Tuesdays"], correct: "Yes!" },
-      { q: "Is a royal oyster a real thing?", options: ["It could be!", "No way", "Only on Tuesdays", "Yes, always"], correct: "It could be!" },
-      // Style E — Sentence pick
-      { q: "Which sentence uses 'joy' correctly?", options: ["She jumped for joy!", "The joy is red", "I joy my shoes", "Joy the door please"], correct: "She jumped for joy!" },
-      { q: "Pick the correct sentence:", options: ["The boy has a toy.", "The boy has a toi.", "The boi has a toy.", "The boi has a toi."], correct: "The boy has a toy." },
+      // Odd one out
+      { q: "Which word does NOT have the /oy/ sound?", options: ["bird", "boy", "toy", "joy"], correct: "bird" },
+      { q: "Which word does NOT have the /oy/ sound?", options: ["paw", "royal", "enjoy", "annoy"], correct: "paw" },
+      { q: "Which word does NOT have the /oy/ sound?", options: ["destroy", "shirt", "cowboy", "loyal"], correct: "shirt" },
+      // Complete the word
+      { q: "t + ___ = toy", options: ["oy", "ay", "aw", "ir"], correct: "oy" },
+      { q: "ann + ___ = annoy", options: ["oy", "oi", "ey", "ay"], correct: "oy" },
+      // Rhyme chains
+      { q: "toy, boy, ___", options: ["joy", "jam", "job", "jug"], correct: "joy" },
+      { q: "royal, loyal, ___", options: ["They rhyme!", "cat", "dog", "fish"], correct: "They rhyme!" },
+      // Syllable counting
+      { q: "How many syllables in 'enjoy'?", options: ["2", "1", "3", "4"], correct: "2" },
+      { q: "How many syllables in 'destroy'?", options: ["2", "1", "3", "4"], correct: "2" },
+      // True or False
+      { q: "True or False: 'oy' usually comes at the END of a word.", options: ["True", "False"], correct: "True" },
+      { q: "True or False: 'oi' and 'oy' make the SAME sound.", options: ["True", "False"], correct: "True" },
+      // Correct sentence
+      { q: "Which sentence is spelled correctly?", options: ["The boy has a toy.", "The boi has a toi.", "The boy has a toi.", "The boi has a toy."], correct: "The boy has a toy." },
       { q: "Which sentence is correct?", options: ["The cowboy enjoys riding.", "The cowboi enjois riding.", "The cowboy enjois riding.", "The cowboi enjoys riding."], correct: "The cowboy enjoys riding." },
+      // Word in context
+      { q: "The king is ___.", options: ["royal", "loyal", "annoy", "destroy"], correct: "royal" },
+      { q: "The opposite of 'build' is ___.", options: ["destroy", "enjoy", "annoy", "royal"], correct: "destroy" },
     ], 25),
   },
 ];

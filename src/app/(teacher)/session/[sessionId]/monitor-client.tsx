@@ -400,25 +400,24 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           </button>
         </header>
 
-        {/* Big game area */}
-        <main className="flex-1 flex items-center justify-center p-8 md:p-16">
-          {renderGame() ?? (
-            <div className="text-center">
-              <p className="font-headline text-3xl text-on-surface-variant">
-                Start the game to begin
-              </p>
-            </div>
-          )}
-        </main>
+        {/* Side-by-side: Game (left) + Leaderboard (right) */}
+        <div className="flex-1 flex overflow-hidden">
+          <main className="flex-[3] flex items-center justify-center p-8 md:p-12 overflow-y-auto">
+            {renderGame() ?? (
+              <div className="text-center">
+                <p className="font-headline text-3xl text-on-surface-variant">
+                  Start the game to begin
+                </p>
+              </div>
+            )}
+          </main>
 
-        {/* Bottom: full podium leaderboard (replaces previous mini list) */}
-        {store.leaderboard.length > 0 && (
-          <footer className="px-8 py-6 bg-white/70 backdrop-blur-xl border-t border-outline-variant/15 max-h-[40vh] overflow-y-auto">
-            <div className="max-w-5xl mx-auto">
-              <LiveLeaderboard variant="full" />
-            </div>
-          </footer>
-        )}
+          {store.leaderboard.length > 0 && (
+            <aside className="flex-[2] border-l border-outline-variant/15 bg-white/70 backdrop-blur-xl overflow-y-auto p-6">
+              <LiveLeaderboard variant="full" onRowClick={setSelectedStudentId} />
+            </aside>
+          )}
+        </div>
 
         <CelebrationOverlay
           open={showCelebration}

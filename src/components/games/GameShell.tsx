@@ -6,6 +6,7 @@ import { useGameStore } from "@/stores/game-store";
 import { Avatar } from "@/components/ui/Avatar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StudentLeaderboardPanel } from "@/components/shared/StudentLeaderboardPanel";
+import { AVATARS } from "@/lib/game-engine/types";
 import { Certificate } from "@/components/shared/Certificate";
 import {
   downloadCertificateAsPng,
@@ -157,7 +158,7 @@ export function GameShell({ children, title, pinCode, onMuteToggle, muted }: Gam
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center max-w-md"
+            className="text-center max-w-lg w-full"
           >
             <motion.div
               animate={{ y: [0, -10, 0] }}
@@ -169,11 +170,52 @@ export function GameShell({ children, title, pinCode, onMuteToggle, muted }: Gam
             <h2 className="font-headline font-black text-3xl md:text-4xl text-primary -rotate-1 mb-2">
               Get Ready!
             </h2>
-            <p className="text-on-surface-variant font-body text-lg">
+            <p className="text-on-surface-variant font-body text-lg mb-6">
               Your teacher will start the game any second now...
             </p>
+
+            {/* Live lobby — students joining */}
+            {leaderboard.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-surface-container-lowest rounded-[20px] p-5 shadow-[0_20px_40px_rgba(0,98,158,0.08)] mb-6"
+              >
+                <p className="text-sm font-headline font-bold text-on-surface-variant mb-4">
+                  <span className="text-primary font-black text-lg">{leaderboard.length}</span>{" "}
+                  player{leaderboard.length !== 1 ? "s" : ""} joined
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <AnimatePresence>
+                    {leaderboard.map((entry) => {
+                      const av = AVATARS.find((a) => a.id === entry.avatar_id);
+                      return (
+                        <motion.div
+                          key={entry.student_id}
+                          initial={{ scale: 0, rotate: -20 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 16 }}
+                          className="flex flex-col items-center gap-1"
+                        >
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-md"
+                            style={{ backgroundColor: av?.color ?? "#2E97E6" }}
+                          >
+                            {av?.emoji ?? "👤"}
+                          </div>
+                          <span className="text-[10px] font-bold text-on-surface-variant truncate max-w-[60px]">
+                            {entry.student_name}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+
             {pinCode && (
-              <p className="mt-6 text-sm text-on-surface-variant font-body">
+              <p className="text-sm text-on-surface-variant font-body">
                 Game PIN: <span className="font-headline font-black text-primary text-xl">{pinCode}</span>
               </p>
             )}
@@ -183,11 +225,46 @@ export function GameShell({ children, title, pinCode, onMuteToggle, muted }: Gam
         {phase !== "waiting" && phase !== "finished" && (
           <>
             {children}
-            {/* Collapsible leaderboard — only visible while the game is
-                active so it doesn't compete with the waiting / finished
-                celebrations. */}
             <StudentLeaderboardPanel />
           </>
+        )}
+
+        {/* Mini podium strip — always visible during play */}
+        {phase !== "waiting" && phase !== "finished" && leaderboard.length > 0 && (
+          <div className="sticky bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-outline-variant/10 shadow-[0_-4px_20px_rgba(0,98,158,0.06)]">
+            <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-center gap-4 md:gap-8">
+              {/* 2nd place */}
+              {leaderboard[1] && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-base">🥈</span>
+                  <span className="font-bold text-on-surface-variant truncate max-w-[80px]">{leaderboard[1].student_name}</span>
+                  <span className="text-xs text-on-surface-variant">{leaderboard[1].total_score.toLocaleString()}</span>
+                </div>
+              )}
+              {/* 1st place */}
+              {leaderboard[0] && (
+                <div className="flex items-center gap-1.5 text-base scale-110 px-3 py-1 rounded-full bg-secondary-container/30">
+                  <span className="text-lg">🥇</span>
+                  <span className="font-headline font-black text-on-surface truncate max-w-[80px]">{leaderboard[0].student_name}</span>
+                  <span className="text-sm font-bold text-primary">{leaderboard[0].total_score.toLocaleString()}</span>
+                </div>
+              )}
+              {/* 3rd place */}
+              {leaderboard[2] && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-base">🥉</span>
+                  <span className="font-bold text-on-surface-variant truncate max-w-[80px]">{leaderboard[2].student_name}</span>
+                  <span className="text-xs text-on-surface-variant">{leaderboard[2].total_score.toLocaleString()}</span>
+                </div>
+              )}
+              {/* My rank */}
+              {myRank && myRank > 3 && (
+                <div className="flex items-center gap-1 text-xs text-on-surface-variant px-2 py-1 rounded-full bg-surface-container-low">
+                  <span className="font-headline font-bold">You: #{myRank}</span>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {phase === "finished" && studentName && avatarId && (
