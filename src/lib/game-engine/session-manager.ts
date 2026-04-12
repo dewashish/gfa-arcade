@@ -55,6 +55,57 @@ export async function createGameSession(
   return data;
 }
 
+/**
+ * Creates a playlist of game sessions — one per activity in the class plan.
+ * All sessions share the same PIN so students stay connected across activities.
+ * Returns the first session (playlist_order = 0).
+ */
+export async function createPlaylistSession(
+  supabase: SupabaseClient<Database>,
+  activities: Array<{ activity_id: string }>,
+  classPlanId: string
+) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated — cannot create a session.");
+
+  // Single PIN for the whole playlist
+  let pinCode = generatePin();
+  let attempts = 0;
+  while (attempts < 10) {
+    const { data: existing } = await supabase
+      .from("game_sessions")
+      .select("id")
+      .eq("pin_code", pinCode)
+      .eq("status", "waiting")
+      .maybeSingle();
+    if (!existing) break;
+    pinCode = generatePin();
+    attempts++;
+  }
+
+  // Create all sessions in one insert
+  const rows = activities.map((a, i) => ({
+    activity_id: a.activity_id,
+    pin_code: pinCode,
+    teacher_id: user.id,
+    class_plan_id: classPlanId,
+    playlist_order: i,
+    status: "waiting" as const,
+  }));
+
+  const { data, error } = await supabase
+    .from("game_sessions")
+    .insert(rows)
+    .select()
+    .order("playlist_order", { ascending: true });
+
+  if (error) throw error;
+  if (!data || data.length === 0) throw new Error("No sessions created");
+  return data[0]; // Return first session
+}
+
 export async function joinGameSession(
   supabase: SupabaseClient<Database>,
   pinCode: string,

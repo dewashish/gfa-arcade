@@ -24,6 +24,16 @@ import type {
   QuizConfig,
 } from "@/lib/game-engine/types";
 
+/** Playlist sibling session shape fetched when the current session
+ *  belongs to a class plan. */
+interface PlaylistSibling {
+  id: string;
+  activity_id: string;
+  playlist_order: number;
+  status: "waiting" | "playing" | "finished";
+  activities: { title: string; game_type: string } | null;
+}
+
 interface Props {
   sessionId: string;
 }
@@ -42,6 +52,9 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [showCertificatesModal, setShowCertificatesModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [leaderboardView, setLeaderboardView] = useState<"podium" | "list">("podium");
+  const [playlistSiblings, setPlaylistSiblings] = useState<PlaylistSibling[]>([]);
+  const [currentPlaylistOrder, setCurrentPlaylistOrder] = useState<number>(0);
+  const isPlaylist = playlistSiblings.length > 1;
   const [, startTransition] = useTransition();
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
@@ -133,6 +146,25 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       // Restore persisted question index so a teacher refresh doesn't
       // snap the view back to question 0.
       store.setCurrentQuestion(session.current_question_index ?? 0);
+
+      // Detect playlist mode — fetch sibling sessions
+      if (session.class_plan_id) {
+        const { data: siblings } = await supabase
+          .from("game_sessions")
+          .select("id, activity_id, playlist_order, status, activities(title, game_type)")
+          .eq("class_plan_id", session.class_plan_id)
+          .order("playlist_order", { ascending: true });
+        if (siblings) {
+          setPlaylistSiblings(
+            siblings.map((s) => ({
+              ...s,
+              playlist_order: s.playlist_order ?? 0,
+              activities: s.activities as unknown as { title: string; game_type: string } | null,
+            }))
+          );
+          setCurrentPlaylistOrder(session.playlist_order ?? 0);
+        }
+      }
 
       if (session.status === "playing") {
         store.setPhase("playing");
@@ -271,6 +303,28 @@ export function TeacherMonitorClient({ sessionId }: Props) {
       if (error) console.warn("[monitor] nextQuestion persist failed:", error.message);
     });
   }
+
+  // ===== Next Activity in Playlist =====
+  function handleNextActivity() {
+    const nextOrder = currentPlaylistOrder + 1;
+    const nextSession = playlistSiblings.find((s) => s.playlist_order === nextOrder);
+    if (!nextSession) return;
+
+    // Broadcast to students that a new activity is coming
+    realtimeRef.current?.broadcastEvent({
+      type: "game:next_activity",
+      sessionId: nextSession.id,
+      activityTitle: nextSession.activities?.title ?? "Next Activity",
+      order: nextOrder,
+    });
+
+    // Navigate teacher to the next session monitor
+    startTransition(() => {
+      router.push(`/session/${nextSession.id}`);
+    });
+  }
+
+  const hasNextActivity = isPlaylist && currentPlaylistOrder < playlistSiblings.length - 1;
 
   // ===== Top winners for celebration =====
   const top3 = store.leaderboard.slice(0, 3);
@@ -461,17 +515,79 @@ export function TeacherMonitorClient({ sessionId }: Props) {
             </>
           )}
           {store.phase === "finished" && (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push("/dashboard")}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 font-headline font-bold text-base text-primary bg-surface-container-low rounded-full"
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-              Back to Dashboard
-            </motion.button>
+            <>
+              {hasNextActivity && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNextActivity}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 font-headline font-black text-lg text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg"
+                >
+                  <span className="material-symbols-outlined">skip_next</span>
+                  Next Activity
+                </motion.button>
+              )}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push("/dashboard")}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 font-headline font-bold text-base text-primary bg-surface-container-low rounded-full"
+              >
+                <span className="material-symbols-outlined">arrow_back</span>
+                Back to Dashboard
+              </motion.button>
+            </>
           )}
         </div>
       </motion.div>
+
+      {/* ===== Playlist Activity Strip ===== */}
+      {isPlaylist && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-surface-container-lowest rounded-[20px] p-4 ambient-shadow"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-base text-primary">playlist_play</span>
+            <span className="text-xs font-headline font-bold text-on-surface-variant uppercase tracking-widest">
+              Activity {currentPlaylistOrder + 1} of {playlistSiblings.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {playlistSiblings.map((sib, i) => {
+              const isCurrent = sib.playlist_order === currentPlaylistOrder;
+              const isDone = sib.status === "finished";
+              return (
+                <div key={sib.id} className="flex items-center gap-2 shrink-0">
+                  {i > 0 && (
+                    <span className="material-symbols-outlined text-xs text-outline-variant">
+                      arrow_forward
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (!isCurrent) router.push(`/session/${sib.id}`);
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-headline font-bold transition-all ${
+                      isCurrent
+                        ? "bg-gradient-to-r from-primary to-primary-container text-white shadow-md ring-2 ring-primary/30"
+                        : isDone
+                          ? "bg-surface-container text-on-surface-variant line-through"
+                          : "bg-surface-container-low text-on-surface hover:bg-surface-container"
+                    }`}
+                  >
+                    {isDone && (
+                      <span className="material-symbols-outlined text-xs mr-1 align-middle">check</span>
+                    )}
+                    {sib.activities?.title ?? `Activity ${i + 1}`}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {/* ===== Main Split: Game + Leaderboard ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -64,6 +64,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      class_plans: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          name: string;
+          activities: Record<string, unknown>[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          name?: string;
+          activities?: Record<string, unknown>[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          activities?: Record<string, unknown>[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       game_sessions: {
         Row: {
           id: string;
@@ -75,6 +99,8 @@ export type Database = {
           ended_at: string | null;
           current_question_index: number;
           teacher_id: string | null;
+          class_plan_id: string | null;
+          playlist_order: number | null;
         };
         Insert: {
           id?: string;
@@ -86,12 +112,16 @@ export type Database = {
           ended_at?: string | null;
           current_question_index?: number;
           teacher_id?: string | null;
+          class_plan_id?: string | null;
+          playlist_order?: number | null;
         };
         Update: {
           status?: "waiting" | "playing" | "finished";
           ended_at?: string | null;
           current_question_index?: number;
           teacher_id?: string | null;
+          class_plan_id?: string | null;
+          playlist_order?: number | null;
         };
         Relationships: [];
       };

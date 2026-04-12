@@ -12,6 +12,9 @@ import { PreviewModal } from "@/components/bank/PreviewModal";
 import { SUBJECT_KEYS, SUBJECT_META, type SubjectKey } from "@/lib/bank/imagery";
 import { GAME_TYPE_LABELS, type BankActivity } from "@/lib/bank/types";
 import { STAGGER, TRANSITION } from "@/lib/design/motion";
+import { ClassPrepTray } from "@/components/bank/ClassPrepTray";
+import { useClassPrepStore } from "@/stores/class-prep-store";
+import { countActivityItems } from "@/lib/bank/types";
 
 interface Props {
   templates: BankActivity[];
@@ -67,6 +70,17 @@ export function BankClient({ templates, fetchError }: Props) {
   const [launchingId, setLaunchingId] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const trayStore = useClassPrepStore();
+
+  function handleAddToTray(activity: BankActivity) {
+    trayStore.addActivity({
+      activity_id: activity.id,
+      title: activity.title,
+      game_type: activity.game_type,
+      subject: activity.subject,
+      item_count: countActivityItems(activity.config_json),
+    });
+  }
 
   function setFilter(key: "subject" | "type", value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -170,7 +184,11 @@ export function BankClient({ templates, fetchError }: Props) {
     );
   }
 
+  const trayOpen = trayStore.open;
+  const trayActivityIds = new Set(trayStore.activities.map((a) => a.activity_id));
+
   return (
+    <div className="flex gap-6 items-start">
     <motion.div
       initial="hidden"
       animate="show"
@@ -178,7 +196,7 @@ export function BankClient({ templates, fetchError }: Props) {
         hidden: { opacity: 0 },
         show: { opacity: 1, transition: { staggerChildren: STAGGER.base, delayChildren: 0.05 } },
       }}
-      className="space-y-10"
+      className={`space-y-10 min-w-0 ${trayOpen ? "flex-1" : "w-full"}`}
     >
       {/* ============ HERO ============ */}
       {/* Centered kinetic headline with floating emoji decorations.
@@ -323,7 +341,7 @@ export function BankClient({ templates, fetchError }: Props) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${trayOpen ? "" : "lg:grid-cols-3"} gap-8`}>
           {filtered.map((activity, idx) => (
             <BankCard
               key={activity.id}
@@ -332,6 +350,8 @@ export function BankClient({ templates, fetchError }: Props) {
               onPreview={setPreviewItem}
               onUse={handleUse}
               isLaunching={launchingId === activity.id}
+              onAddToTray={handleAddToTray}
+              isInTray={trayActivityIds.has(activity.id)}
             />
           ))}
         </div>
@@ -348,5 +368,9 @@ export function BankClient({ templates, fetchError }: Props) {
         isLaunching={launchingId !== null && launchingId === previewItem?.id}
       />
     </motion.div>
+
+    {/* Class Prep Tray — side panel */}
+    <ClassPrepTray />
+    </div>
   );
 }
