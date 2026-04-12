@@ -1,17 +1,19 @@
 import type { GameType } from "./types";
 
-const BASE_SCORES: Record<GameType, number> = {
-  "spin-wheel": 0, // Score comes from wheel segments
-  "match-up": 100,
-  quiz: 1000,
-  flashcards: 0, // No competitive scoring
-  "speaking-cards": 0, // No competitive scoring
-  "complete-sentence": 100,
-  "group-sort": 100,
-};
+/**
+ * Scoring formula (v2):
+ *
+ *   Correct:   100 base + up to 50 time bonus = max 150 per question
+ *   Attempted: 20 participation points (no negatives)
+ *   Skipped:   0
+ *
+ * No streak multiplier — streaks are purely visual.
+ * Tiebreaker: faster answers earn more via the time bonus.
+ */
 
-const TIME_BONUS_MAX = 500;
-const STREAK_MULTIPLIERS = [1, 1.2, 1.5, 2, 2.5, 3];
+const BASE_CORRECT = 100;
+const BASE_ATTEMPT = 20;
+const TIME_BONUS_MAX = 50;
 
 export function calculateScore(params: {
   gameType: GameType;
@@ -19,9 +21,9 @@ export function calculateScore(params: {
   timeTakenMs: number;
   timeLimitMs: number;
   streak: number;
-  segmentValue?: number; // For spin wheel
+  segmentValue?: number;
 }): number {
-  const { gameType, isCorrect, timeTakenMs, timeLimitMs, streak, segmentValue } = params;
+  const { gameType, isCorrect, timeTakenMs, timeLimitMs, segmentValue } = params;
 
   // Spin wheel uses segment value directly
   if (gameType === "spin-wheel") {
@@ -33,17 +35,12 @@ export function calculateScore(params: {
     return 0;
   }
 
-  if (!isCorrect) return 0;
+  // Attempted but wrong — participation points
+  if (!isCorrect) return BASE_ATTEMPT;
 
-  const baseScore = BASE_SCORES[gameType];
-
-  // Time bonus: faster = more points (linear scale)
+  // Correct answer: base + time bonus
   const timeRatio = Math.max(0, 1 - timeTakenMs / timeLimitMs);
   const timeBonus = Math.round(timeRatio * TIME_BONUS_MAX);
 
-  // Streak multiplier (capped at 3x)
-  const streakIndex = Math.min(streak, STREAK_MULTIPLIERS.length - 1);
-  const multiplier = STREAK_MULTIPLIERS[streakIndex];
-
-  return Math.round((baseScore + timeBonus) * multiplier);
+  return BASE_CORRECT + timeBonus;
 }

@@ -48,6 +48,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const [activityTitle, setActivityTitle] = useState("");
   const [presentMode, setPresentMode] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showCertificatesModal, setShowCertificatesModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -402,12 +403,35 @@ export function TeacherMonitorClient({ sessionId }: Props) {
 
         {/* Side-by-side: Game (left) + Leaderboard (right) */}
         <div className="flex-1 flex overflow-hidden">
-          <main className="flex-[3] flex items-center justify-center p-8 md:p-12 overflow-y-auto">
+          <main className="flex-[3] flex flex-col overflow-y-auto">
+            <div className="flex-1 flex items-center justify-center p-8 md:p-12">
             {renderGame() ?? (
               <div className="text-center">
                 <p className="font-headline text-3xl text-on-surface-variant">
                   Start the game to begin
                 </p>
+              </div>
+            )}
+            </div>
+            {/* Answer status in presentation mode */}
+            {store.phase === "playing" && store.config?.type === "quiz" && (
+              <div className="px-8 py-3 bg-white/60 backdrop-blur-sm border-t border-outline-variant/10">
+                <div className="flex items-center gap-4 max-w-4xl mx-auto">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm font-bold mb-1">
+                      <span className="text-on-surface-variant">
+                        {store.answeredStudentIds.length === participants && participants > 0 ? "✅ All in!" : "Answering..."}
+                      </span>
+                      <span className="text-primary">{store.answeredStudentIds.length} / {participants}</span>
+                    </div>
+                    <div className="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-tertiary-container rounded-full transition-all duration-500"
+                        style={{ width: `${participants > 0 ? (store.answeredStudentIds.length / participants) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </main>
@@ -487,6 +511,13 @@ export function TeacherMonitorClient({ sessionId }: Props) {
             <span className="material-symbols-outlined text-primary text-base">timer</span>
             <span className="font-headline font-bold text-xl text-primary">{timer.formatTime()}</span>
           </div>
+          <button
+            onClick={() => setShowRules(true)}
+            className="font-label font-medium text-on-surface-variant hover:text-primary transition-colors px-3 py-2 flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-base">menu_book</span>
+            Rules
+          </button>
           <SimulateClassButton sessionId={sessionId} />
           {store.phase === "waiting" && (
             <motion.button
@@ -855,6 +886,60 @@ export function TeacherMonitorClient({ sessionId }: Props) {
           </motion.div>
         </div>
       </main>
+
+      {/* ===== RULES OVERLAY ===== */}
+      <AnimatePresence>
+        {showRules && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-on-surface/50 backdrop-blur-sm flex items-center justify-center p-8"
+            onClick={() => setShowRules(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-surface-container-lowest rounded-[28px] p-10 md:p-16 max-w-2xl w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="font-headline font-black text-3xl md:text-5xl text-primary text-center -rotate-1 mb-8">
+                📋 Scoring Rules
+              </h2>
+              <div className="space-y-5 text-lg md:text-xl font-body">
+                <div className="flex items-center gap-4 bg-tertiary-container/10 rounded-2xl p-4">
+                  <span className="text-3xl">✅</span>
+                  <div><strong className="font-headline">Correct answer</strong><br /><span className="text-on-surface-variant">100 points</span></div>
+                </div>
+                <div className="flex items-center gap-4 bg-secondary-container/10 rounded-2xl p-4">
+                  <span className="text-3xl">✏️</span>
+                  <div><strong className="font-headline">Attempted</strong><br /><span className="text-on-surface-variant">20 points for trying</span></div>
+                </div>
+                <div className="flex items-center gap-4 bg-primary-container/10 rounded-2xl p-4">
+                  <span className="text-3xl">⏱️</span>
+                  <div><strong className="font-headline">Speed bonus</strong><br /><span className="text-on-surface-variant">Up to 50 extra points for fast answers</span></div>
+                </div>
+                <div className="flex items-center gap-4 bg-error-container/10 rounded-2xl p-4">
+                  <span className="text-3xl">🔥</span>
+                  <div><strong className="font-headline">Streaks</strong><br /><span className="text-on-surface-variant">3+ correct in a row = On Fire! (shown to everyone)</span></div>
+                </div>
+                <div className="flex items-center gap-4 bg-surface-container-low rounded-2xl p-4">
+                  <span className="text-3xl">❌</span>
+                  <div><strong className="font-headline">No negatives!</strong><br /><span className="text-on-surface-variant">You never lose points</span></div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRules(false)}
+                className="mt-8 w-full h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-black text-xl shadow-lg active:scale-95 transition-transform"
+              >
+                Got it!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ===== MODALS (unchanged) ===== */}
       <CelebrationOverlay

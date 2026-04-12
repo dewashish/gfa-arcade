@@ -255,7 +255,8 @@ export type GameEvent =
   | { type: "game:join"; studentId: string; studentName: string; avatarId: string }
   | { type: "game:answer"; studentId: string; questionIndex: number; answer: unknown }
   | { type: "game:next_activity"; sessionId: string; activityTitle: string; order: number }
-  | { type: "game:timer_sync"; remaining: number; total: number };
+  | { type: "game:timer_sync"; remaining: number; total: number }
+  | { type: "game:streak"; studentName: string; streak: number };
 
 // ===== Leaderboard Entry =====
 
