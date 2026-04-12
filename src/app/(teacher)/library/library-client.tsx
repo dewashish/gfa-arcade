@@ -104,54 +104,8 @@ export function LibraryClient({ activities }: Props) {
     }
   }
 
-  // Empty state
-  if (activities.length === 0) {
-    const img = EMPTY_STATE_IMAGES.library;
-    return (
-      <div className="space-y-6">
-        <KineticHeadline as="h1" size="lg" tone="on-surface" rotate={-1}>
-          My Library
-        </KineticHeadline>
-        <div className="bg-surface-container-low rounded-xl p-12 text-center">
-          <Image
-            src={img.url}
-            alt={img.alt}
-            width={img.width}
-            height={img.height}
-            className="w-48 h-48 mx-auto mb-6 object-contain drop-shadow-lg"
-            priority
-          />
-          <p className="font-headline font-bold text-2xl text-on-surface mb-2">
-            Your library is empty
-          </p>
-          <p className="text-on-surface-variant font-body mb-6 max-w-md mx-auto">
-            Build your own activity from scratch, or browse the Activity Bank for ready-made
-            content aligned to the Year 1 curriculum.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link
-              href="/bank"
-              className="focus-ring h-12 px-6 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold inline-flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined" aria-hidden="true">
-                backpack
-              </span>
-              Browse Activity Bank
-            </Link>
-            <Link
-              href="/create"
-              className="focus-ring h-12 px-6 rounded-full bg-surface-container-lowest text-primary font-headline font-bold inline-flex items-center gap-2 ambient-shadow"
-            >
-              <span className="material-symbols-outlined" aria-hidden="true">
-                add_circle
-              </span>
-              Create New
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Empty state (only for activities — plans still shown above)
+  const showEmptyActivities = activities.length === 0;
 
   return (
     <div className="space-y-8">
@@ -292,7 +246,35 @@ export function LibraryClient({ activities }: Props) {
         </section>
       )}
 
-      {/* Grid */}
+      {/* Activities Grid or Empty State */}
+      {showEmptyActivities ? (
+        <div className="bg-surface-container-low rounded-xl p-12 text-center">
+          <div className="text-7xl mb-4">📦</div>
+          <p className="font-headline font-bold text-2xl text-on-surface mb-2">
+            No activities yet
+          </p>
+          <p className="text-on-surface-variant font-body mb-6 max-w-md mx-auto">
+            Build your own activity from scratch, or browse the Activity Bank for ready-made
+            content aligned to the Year 1 curriculum.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link
+              href="/bank"
+              className="focus-ring h-12 px-6 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold inline-flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">backpack</span>
+              Browse Activity Bank
+            </Link>
+            <Link
+              href="/create"
+              className="focus-ring h-12 px-6 rounded-full bg-surface-container-lowest text-primary font-headline font-bold inline-flex items-center gap-2 ambient-shadow"
+            >
+              <span className="material-symbols-outlined" aria-hidden="true">add_circle</span>
+              Create New
+            </Link>
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sorted.map((activity, idx) => {
           const gameInfo = GAME_TYPE_LABELS[activity.game_type] ?? {
@@ -368,6 +350,7 @@ export function LibraryClient({ activities }: Props) {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
