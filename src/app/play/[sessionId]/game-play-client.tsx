@@ -141,6 +141,41 @@ export function GamePlayClient({ sessionId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
+  // Polling fallback — if realtime misses the game:start event (e.g.,
+  // student joined after teacher started, or subscription was slow to
+  // connect), poll session status every 3s until phase advances.
+  useEffect(() => {
+    if (store.phase !== "waiting") return;
+    const supabase = supabaseRef.current;
+    const id = setInterval(async () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      const { data } = await supabase
+        .from("game_sessions")
+        .select("status, current_question_index")
+        .eq("id", sessionId)
+        .single();
+      if (data?.status === "playing" && store.phase === "waiting") {
+        store.setPhase("playing");
+        store.setCurrentQuestion(data.current_question_index ?? 0);
+        play("join");
+      } else if (data?.status === "finished" && store.phase !== "finished") {
+        store.setPhase("finished");
+      }
+    }, 3000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, store.phase]);
+
+  // Also fetch existing participants on mount so the waiting lobby
+  // shows students who joined BEFORE this student.
+  useEffect(() => {
+    const supabase = supabaseRef.current;
+    supabase
+      .rpc("get_session_leaderboard", { p_session_id: sessionId })
+      .then(({ data }) => { if (data) store.setLeaderboard(data); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
   // Auto-navigate to next activity after countdown
   useEffect(() => {
     if (!nextActivityInfo) return;

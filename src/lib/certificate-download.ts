@@ -11,15 +11,35 @@ const CERT_HEIGHT = 680;
 
 async function captureCanvas(el: HTMLElement) {
   const { default: html2canvas } = await import("html2canvas");
-  return html2canvas(el, {
-    scale: 2, // 2x scale so PNG / PDF look crisp when printed
-    backgroundColor: null,
-    width: CERT_WIDTH,
-    height: CERT_HEIGHT,
-    windowWidth: CERT_WIDTH,
-    windowHeight: CERT_HEIGHT,
-    useCORS: true,
-  });
+
+  // The certificate element is wrapped in a parent with
+  // `transform: scale(var(--cert-scale))` for responsive display.
+  // html2canvas can't handle cascading CSS transforms — it captures
+  // the scaled-down version and then forces 960x680, causing jumbled
+  // output. Fix: temporarily reset the parent's transform.
+  const parent = el.parentElement;
+  let savedTransform = "";
+  if (parent) {
+    savedTransform = parent.style.transform;
+    parent.style.transform = "none";
+  }
+
+  try {
+    return await html2canvas(el, {
+      scale: 2,
+      backgroundColor: null,
+      width: CERT_WIDTH,
+      height: CERT_HEIGHT,
+      windowWidth: CERT_WIDTH,
+      windowHeight: CERT_HEIGHT,
+      useCORS: true,
+    });
+  } finally {
+    // Restore the scale transform
+    if (parent) {
+      parent.style.transform = savedTransform;
+    }
+  }
 }
 
 function triggerDownload(blob: Blob, filename: string) {
