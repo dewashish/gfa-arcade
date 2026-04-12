@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TimerRingProps {
   /** Total duration in seconds */
@@ -19,7 +19,7 @@ interface TimerRingProps {
 
 /**
  * Circular countdown ring with color transition (tertiary -> secondary -> error)
- * as time runs out. Used in quiz/game timers.
+ * as time runs out. Uses a start-time ref to avoid re-render jitter.
  */
 export function TimerRing({
   duration,
@@ -30,30 +30,42 @@ export function TimerRing({
   strokeWidth = 10,
   className = "",
 }: TimerRingProps) {
-  const [remaining, setRemaining] = useState(duration);
   const isControlled = typeof remainingOverride === "number";
-  const value = isControlled ? remainingOverride! : remaining;
+  const [displaySeconds, setDisplaySeconds] = useState(duration);
+  const startTimeRef = useRef<number>(0);
+  const completedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
+  // Reset when duration changes or running starts
   useEffect(() => {
-    if (isControlled || !running) return;
-    setRemaining(duration);
+    if (isControlled) return;
+    if (running) {
+      startTimeRef.current = Date.now();
+      completedRef.current = false;
+      setDisplaySeconds(duration);
+    }
   }, [duration, running, isControlled]);
 
+  // Tick loop — uses requestAnimationFrame-like interval for smooth updates
   useEffect(() => {
     if (isControlled || !running) return;
-    const start = Date.now();
+
     const id = setInterval(() => {
-      const elapsed = (Date.now() - start) / 1000;
-      const next = Math.max(0, duration - elapsed);
-      setRemaining(next);
-      if (next <= 0) {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000;
+      const remaining = Math.max(0, duration - elapsed);
+      setDisplaySeconds(remaining);
+      if (remaining <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        onCompleteRef.current?.();
         clearInterval(id);
-        onComplete?.();
       }
     }, 100);
-    return () => clearInterval(id);
-  }, [duration, running, isControlled, onComplete]);
 
+    return () => clearInterval(id);
+  }, [duration, running, isControlled]);
+
+  const value = isControlled ? remainingOverride! : displaySeconds;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const progress = Math.max(0, Math.min(1, value / duration));

@@ -1074,41 +1074,35 @@ const ACTIVITIES = [
     ], 25),
   },
 
-  // 7. Quiz: 'oy' Sound Visual Challenge (Hard — 25 questions, no answer reveals)
+  // 7. Quiz: 'oy' Sound Visual Challenge (Hard — 20 questions, no answer reveals)
   {
     title: "🔥 'oy' Sound Visual Challenge",
     subject: "phonics",
     topic: "oy sound",
-    description: "25 hard questions — unscramble, word build, sentence fill, odd one out & more!",
+    description: "20 hard questions — unscramble, word build, sentence fill, odd one out & more!",
     difficulty: "hard",
     config: quiz([
-      // --- 🔤 Missing Sound (picture hint, word NOT shown) ---
-      { q: "🧸 Something you play with. Fill the gap: t___", options: ["oy", "ay", "aw", "oe"], correct: "oy" },
-      { q: "👦 A young child. Fill the gap: b___", options: ["oy", "ay", "ow", "ee"], correct: "oy" },
+      // --- 🔤 Missing Sound ---
       { q: "🎉 Having fun at a party. Fill: enj___", options: ["oy", "oi", "ay", "ey"], correct: "oy" },
       { q: "💥 A wrecking ball does this. Fill: destr___", options: ["oy", "oi", "ay", "ey"], correct: "oy" },
       { q: "👑 Like a king or queen. Fill: r___al", options: ["oy", "oi", "ay", "ea"], correct: "oy" },
       { q: "🦪 A shellfish from the sea. Fill: ___ster", options: ["oy", "oi", "ou", "ay"], correct: "oy" },
 
       // --- 🚫 Odd One Out ---
-      { q: "3 words have /oy/. Which does NOT belong?", options: ["🌙 moon", "😊 joy", "🧸 toy", "👦 boy"], correct: "🌙 moon" },
       { q: "Which does NOT have the /oy/ sound?", options: ["🐦 bird", "🤠 cowboy", "👑 royal", "🤝 loyal"], correct: "🐦 bird" },
       { q: "Find the odd one out!", options: ["🌊 sea", "🎉 enjoy", "😤 annoy", "💥 destroy"], correct: "🌊 sea" },
       { q: "One word does NOT have /oy/. Which?", options: ["🌧️ rain", "🦪 oyster", "⛵ voyage", "🤠 cowboy"], correct: "🌧️ rain" },
 
       // --- 📦 Sound Sort ---
-      { q: "Which box has ONLY 'oy' words?", options: ["joy, boy, toy", "joy, oil, toy", "boy, coin, toy", "toy, soil, joy"], correct: "joy, boy, toy" },
       { q: "Which box has ONLY 'oy' words?", options: ["royal, loyal, enjoy", "royal, rain, enjoy", "loyal, loud, annoy", "enjoy, found, destroy"], correct: "royal, loyal, enjoy" },
 
       // --- 🔨 Word Build ---
-      { q: "🧱 Build: c + ow + b + oy = ?", options: ["cowboy", "cobwoy", "cowbay", "cobway"], correct: "cowboy" },
       { q: "🧱 Build: d + e + str + oy = ?", options: ["destroy", "destray", "distroi", "destory"], correct: "destroy" },
       { q: "🧱 Build: v + oy + age = ?", options: ["voyage", "voyige", "voiage", "voyaje"], correct: "voyage" },
       { q: "🧱 Build: oy + st + er = ?", options: ["oyster", "oister", "oystir", "oystur"], correct: "oyster" },
       { q: "🧱 Build: em + pl + oy = ?", options: ["employ", "emplay", "emploi", "empoyl"], correct: "employ" },
 
       // --- 🔀 Unscramble ---
-      { q: "🔀 Unscramble: y-o-j. Hint: 😊 a happy feeling!", options: ["joy", "yoj", "ojy", "jyo"], correct: "joy" },
       { q: "🔀 Unscramble: l-a-y-o-r. Hint: 👑 belongs to a king!", options: ["royal", "layro", "ryloa", "lorya"], correct: "royal" },
       { q: "🔀 Unscramble: o-y-n-a-n. Hint: 😤 to bother someone!", options: ["annoy", "noany", "yonan", "noyya"], correct: "annoy" },
       { q: "🔀 Unscramble: r-e-s-t-y-o. Hint: 🦪 a sea shellfish!", options: ["oyster", "storey", "roytes", "yrotes"], correct: "oyster" },
@@ -1120,6 +1114,7 @@ const ACTIVITIES = [
 
       // --- 🔢 Count the Sound ---
       { q: "How many have /oy/? boy, cat, royal, dog, annoy, oyster", options: ["4", "3", "5", "2"], correct: "4" },
+      { q: "How many /oy/ words? enjoy, rain, voyage, bird, loyal, sea", options: ["3", "2", "4", "1"], correct: "3" },
     ], 30),
   },
 ];
