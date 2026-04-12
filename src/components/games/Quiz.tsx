@@ -97,10 +97,15 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
       play("ding");
       burst();
       incrementStreak();
-      addScore(1000);
+      // Score is calculated server-side via submitScore — add a visual
+      // estimate here so the header pill updates instantly.
+      const timeRatio = Math.max(0, 1 - timeTaken / ((timeLimit ?? 30) * 1000));
+      const visualScore = 100 + Math.round(timeRatio * 50);
+      addScore(visualScore);
     } else {
       play("wrong");
       resetStreak();
+      addScore(20); // Participation points
     }
 
     onAnswer(currentQuestionIndex, optionIndex, correct, timeTaken);

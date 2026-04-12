@@ -41,6 +41,9 @@ export function GamePlayClient({ sessionId }: Props) {
     sessionId: string;
     countdown: number;
   } | null>(null);
+  const [streakToasts, setStreakToasts] = useState<
+    Array<{ id: number; name: string; streak: number }>
+  >([]);
 
   // Load session data and subscribe to realtime
   useEffect(() => {
@@ -110,6 +113,15 @@ export function GamePlayClient({ sessionId }: Props) {
               store.setPhase("finished");
               fireworks();
               play("levelup");
+              break;
+            case "game:streak":
+              // Another student hit a streak milestone — show toast
+              if (event.studentName !== store.studentName) {
+                setStreakToasts((prev) => [
+                  ...prev,
+                  { id: Date.now(), name: event.studentName, streak: event.streak },
+                ]);
+              }
               break;
             case "game:next_activity":
               // Show transition screen and auto-navigate
@@ -207,17 +219,34 @@ export function GamePlayClient({ sessionId }: Props) {
   ) {
     if (!store.studentId || !store.config) return;
 
+    // Use actual time limit from config, fallback to 30s
+    const configTimeLimit =
+      store.config.type === "quiz"
+        ? (store.config.questions?.[questionIndex]?.time_limit_seconds ?? 30) * 1000
+        : store.config.type === "match-up" || store.config.type === "group-sort"
+          ? ((store.config as { time_limit_seconds?: number }).time_limit_seconds ?? 90) * 1000
+          : 30000;
+
     const score = calculateScore({
       gameType: store.config.type,
       isCorrect,
       timeTakenMs,
-      timeLimitMs: 30000,
+      timeLimitMs: configTimeLimit,
       streak: store.myStreak,
       segmentValue: opts?.segmentValue,
     });
 
     if (isCorrect) {
       store.incrementStreak();
+      // Broadcast streak milestones to other students
+      const newStreak = store.myStreak + 1; // incrementStreak hasn't run yet in Zustand
+      if ([3, 5, 8, 10, 15, 20].includes(newStreak)) {
+        realtimeRef.current?.broadcastEvent({
+          type: "game:streak",
+          studentName: store.studentName ?? "Player",
+          streak: newStreak,
+        });
+      }
     } else {
       store.resetStreak();
     }
@@ -338,6 +367,8 @@ export function GamePlayClient({ sessionId }: Props) {
       title={store.config?.type.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
       onMuteToggle={toggleMute}
       muted={muted}
+      streakToasts={streakToasts}
+      onDismissStreak={(id) => setStreakToasts((prev) => prev.filter((t) => t.id !== id))}
     >
       {renderGame()}
     </GameShell>
