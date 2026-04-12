@@ -204,6 +204,46 @@ export type ActivityConfig =
   | CompleteSentenceConfig
   | GroupSortConfig;
 
+// ===== Class Plan / Pacing =====
+
+export type TimerMode = "per-question" | "overall" | "none";
+
+export interface ActivityPacingConfig {
+  timer_mode: TimerMode;
+  /** Seconds — per-question when mode is "per-question", total when "overall" */
+  timer_seconds: number;
+  /** Auto-advance to next question when timer expires */
+  auto_advance: boolean;
+  /** Teacher can skip ahead if all students answered */
+  teacher_can_skip: boolean;
+}
+
+export interface ClassPlanActivity {
+  activity_id: string;
+  pacing: ActivityPacingConfig;
+  order: number;
+}
+
+export interface ClassPlan {
+  id: string;
+  teacher_id: string;
+  name: string;
+  activities: ClassPlanActivity[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** Default pacing for a game type when first added to a class plan. */
+export function defaultPacing(gameType: string): ActivityPacingConfig {
+  const perQ = ["quiz", "spin-wheel"];
+  return {
+    timer_mode: perQ.includes(gameType) ? "per-question" : "overall",
+    timer_seconds: perQ.includes(gameType) ? 25 : 90,
+    auto_advance: true,
+    teacher_can_skip: true,
+  };
+}
+
 // ===== Realtime Events =====
 
 export type GameEvent =
@@ -213,7 +253,9 @@ export type GameEvent =
   | { type: "game:round_result"; results: Record<string, number> }
   | { type: "game:end" }
   | { type: "game:join"; studentId: string; studentName: string; avatarId: string }
-  | { type: "game:answer"; studentId: string; questionIndex: number; answer: unknown };
+  | { type: "game:answer"; studentId: string; questionIndex: number; answer: unknown }
+  | { type: "game:next_activity"; sessionId: string; activityTitle: string; order: number }
+  | { type: "game:timer_sync"; remaining: number; total: number };
 
 // ===== Leaderboard Entry =====
 

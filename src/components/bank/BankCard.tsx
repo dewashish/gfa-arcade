@@ -13,6 +13,8 @@ interface BankCardProps {
   onPreview: (activity: BankActivity) => void;
   onUse: (activity: BankActivity) => void;
   isLaunching: boolean;
+  onAddToTray?: (activity: BankActivity) => void;
+  isInTray?: boolean;
 }
 
 /**
@@ -43,7 +45,7 @@ interface BankCardProps {
  *     sprout, etc. — see SubjectMascot.tsx for per-subject choreography).
  *   - A soft scale-up on the hero gradient adds depth.
  */
-export function BankCard({ activity, index, onPreview, onUse, isLaunching }: BankCardProps) {
+export function BankCard({ activity, index, onPreview, onUse, isLaunching, onAddToTray, isInTray }: BankCardProps) {
   const [hover, setHover] = useState(false);
 
   const subjectKey = (activity.subject ?? "maths") as SubjectKey;
@@ -121,6 +123,31 @@ export function BankCard({ activity, index, onPreview, onUse, isLaunching }: Ban
           <SubjectMascot subject={subjectKey} hover={hover} className="w-full h-full" />
         </motion.div>
       </div>
+
+      {/* ============ ADD TO TRAY BUTTON ============ */}
+      {onAddToTray && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToTray(activity);
+          }}
+          disabled={isInTray}
+          className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+            isInTray
+              ? "bg-tertiary-container text-on-tertiary-container"
+              : "bg-gradient-to-br from-primary to-primary-container text-white hover:shadow-xl"
+          }`}
+          aria-label={isInTray ? "Already in plan" : `Add ${activity.title} to class plan`}
+        >
+          <span className="material-symbols-outlined text-xl">
+            {isInTray ? "check" : "add"}
+          </span>
+        </motion.button>
+      )}
 
       {/* ============ CONTENT ============ */}
       <div className="relative flex flex-col gap-3 flex-1">

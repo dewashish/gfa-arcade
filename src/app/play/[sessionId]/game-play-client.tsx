@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { RealtimeManager } from "@/lib/game-engine/realtime";
 import { calculateScore } from "@/lib/game-engine/score-calculator";
@@ -29,10 +31,16 @@ interface Props {
 
 export function GamePlayClient({ sessionId }: Props) {
   const store = useGameStore();
+  const router = useRouter();
   const { play, muted, toggleMute } = useSound();
   const { fireworks } = useConfetti();
   const realtimeRef = useRef<RealtimeManager | null>(null);
   const supabaseRef = useRef(createClient());
+  const [nextActivityInfo, setNextActivityInfo] = useState<{
+    title: string;
+    sessionId: string;
+    countdown: number;
+  } | null>(null);
 
   // Load session data and subscribe to realtime
   useEffect(() => {
@@ -95,6 +103,15 @@ export function GamePlayClient({ sessionId }: Props) {
               fireworks();
               play("levelup");
               break;
+            case "game:next_activity":
+              // Show transition screen and auto-navigate
+              setNextActivityInfo({
+                title: event.activityTitle,
+                sessionId: event.sessionId,
+                countdown: 3,
+              });
+              play("whoosh");
+              break;
           }
         },
         () => {
@@ -115,6 +132,29 @@ export function GamePlayClient({ sessionId }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
+
+  // Auto-navigate to next activity after countdown
+  useEffect(() => {
+    if (!nextActivityInfo) return;
+    if (nextActivityInfo.countdown <= 0) {
+      // Re-join the new session with the same student identity
+      const studentId = store.studentId;
+      const studentName = store.studentName;
+      const avatarId = store.avatarId;
+      store.reset();
+      if (studentId) store.setStudent(studentId, studentName ?? "", avatarId ?? "cat");
+      router.replace(`/play/${nextActivityInfo.sessionId}`);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setNextActivityInfo((prev) =>
+        prev ? { ...prev, countdown: prev.countdown - 1 } : null
+      );
+      play("tick");
+    }, 1000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextActivityInfo]);
 
   async function submitScore(
     questionIndex: number,
@@ -212,6 +252,42 @@ export function GamePlayClient({ sessionId }: Props) {
       default:
         return <p className="text-on-surface-variant">Unknown game type</p>;
     }
+  }
+
+  // ===== Next Activity Transition Screen =====
+  if (nextActivityInfo) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 z-50 bg-gradient-to-br from-primary to-primary-container flex items-center justify-center"
+      >
+        <div className="text-center text-white space-y-6">
+          <motion.div
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity }}
+            className="text-7xl"
+          >
+            🚀
+          </motion.div>
+          <h2 className="font-headline font-black text-3xl md:text-5xl">
+            Next up!
+          </h2>
+          <p className="font-headline font-bold text-xl md:text-2xl opacity-90">
+            {nextActivityInfo.title}
+          </p>
+          <motion.div
+            key={nextActivityInfo.countdown}
+            initial={{ scale: 2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="font-headline font-black text-8xl"
+          >
+            {nextActivityInfo.countdown > 0 ? nextActivityInfo.countdown : "GO!"}
+          </motion.div>
+          <p className="text-sm opacity-70 font-body">Get ready...</p>
+        </div>
+      </motion.div>
+    );
   }
 
   return (
