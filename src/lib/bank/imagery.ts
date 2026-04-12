@@ -62,7 +62,7 @@ export const SUBJECT_IMAGES: Record<SubjectKey, BankImage> = {
   },
   pshe: {
     url: "https://lh3.googleusercontent.com/aida-public/AB6AXuAahc2K9lh2sudc0ujMQBVkZgRhVeEVoEf1dQAMuU4gRUM3w1vKhOE28B5stLmxvZ4zIi28ilcdS5p38HQJJ7Q7_6n92UfzxS9gYT0V-RDaKX0SBaWfTvi3kvaT_8J372lpURD4kenfc1ntxiN29ti6MGQOVuQityEpUjfxundp-JN1-aCsy5Wg59BqHCr4ePZLjt6NdpNTreRHw4zKTsBlh6xiUM1rctH-Cbn5ydppcAZne3iJxete9q044PW4rI0Ad5y_KmXD_NA",
-    alt: "Two cartoon hands holding each other in front of a giant red heart and a cheerful rainbow",
+    alt: "Two cartoon hands holding each other in front of a giant red heart and colourful decorations",
     width: 400,
     height: 400,
   },
@@ -232,7 +232,7 @@ export const EMPTY_STATE_IMAGES: Record<"library" | "reports" | "bank" | "settin
   },
   bank: {
     url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCBcVrDdBeqBUC0dUUnIlxPVMWDNypzI_IgYaU7qq6ON-NOn1P3BoUU-Txzas4lsT9ub3Cj_-kyQcX4Ka5DnxE_uKJCzWWV0ZKGZffXjjjR0JMBVK5we0FaIAoBw7226p7_o1f5KgbRkYZaMAsmIjVlckOvHPyhH5-QSYAtF4xRdkgpgYUUyp-nbeXV6-oS8owYEaP8r-Y88PL7zDemsyjaS3RNOYXQk0S6IbEQFiHi2E2hXap_TnIB-B9on3aWdC67mxjgMDKV4WI",
-    alt: "Magical open cartoon backpack with colorful rainbows and sparkles coming out of the main pocket",
+    alt: "Magical open cartoon backpack with colourful sparkles and stars coming out of the main pocket",
     width: 400,
     height: 400,
   },

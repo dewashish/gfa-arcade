@@ -251,15 +251,15 @@ const ACTIVITIES = [
     difficulty: "easy",
     config: quiz([
       { q: "Blend the sounds: c-a-t", options: ["cat", "cap", "cot", "cut"], correct: "cat" },
-      { q: "Which word starts with the sound 's'?", options: ["dog", "sun", "pig", "hat"], correct: "sun" },
+      { q: "Which word starts with the sound 's'?", options: ["dog", "sun", "pen", "hat"], correct: "sun" },
       { q: "Blend: p-i-n", options: ["pan", "pin", "pen", "pun"], correct: "pin" },
       { q: "What is the first sound in 'tap'?", options: ["a", "p", "t", "s"], correct: "t" },
       { q: "Blend: m-a-p", options: ["map", "mop", "man", "mat"], correct: "map" },
-      { q: "Which word starts with the sound 'p'?", options: ["dog", "cat", "pig", "fish"], correct: "pig" },
+      { q: "Which word starts with the sound 'p'?", options: ["dog", "cat", "pot", "fish"], correct: "pot" },
       { q: "Blend: s-i-t", options: ["sat", "sit", "set", "sun"], correct: "sit" },
       { q: "What is the last sound in 'dog'?", options: ["d", "o", "g", "do"], correct: "g" },
       { q: "Blend: t-i-n", options: ["tan", "ten", "tin", "ton"], correct: "tin" },
-      { q: "Which word starts with the sound 'n'?", options: ["nut", "cat", "dog", "pig"], correct: "nut" },
+      { q: "Which word starts with the sound 'n'?", options: ["nut", "cat", "dog", "pen"], correct: "nut" },
     ]),
   },
   {
@@ -293,7 +293,7 @@ const ACTIVITIES = [
       { term: "bee", definition: "tree" },
       { term: "sun", definition: "bun" },
       { term: "star", definition: "car" },
-      { term: "pig", definition: "wig" },
+      { term: "pin", definition: "bin" },
       { term: "moon", definition: "spoon" },
       { term: "fish", definition: "dish" },
     ]),
@@ -328,7 +328,7 @@ const ACTIVITIES = [
     config: groupSort([
       { name: "Starts with 's'", items: ["sun", "sock", "sand", "snake"] },
       { name: "Starts with 'b'", items: ["ball", "bee", "bat", "book"] },
-      { name: "Starts with 'p'", items: ["pig", "pen", "pot", "pan"] },
+      { name: "Starts with 'p'", items: ["pin", "pen", "pot", "pan"] },
     ]),
   },
   {

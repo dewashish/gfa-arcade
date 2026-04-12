@@ -22,7 +22,7 @@ const FLOATING_SHAPES = [
   { emoji: "⭐", x: "8%", y: "12%", size: "text-5xl", delay: 0, duration: 6 },
   { emoji: "🚀", x: "85%", y: "15%", size: "text-4xl", delay: 1.2, duration: 7 },
   { emoji: "🎈", x: "12%", y: "78%", size: "text-5xl", delay: 0.6, duration: 5.5 },
-  { emoji: "🌈", x: "82%", y: "75%", size: "text-4xl", delay: 1.8, duration: 6.5 },
+  { emoji: "🌟", x: "82%", y: "75%", size: "text-4xl", delay: 1.8, duration: 6.5 },
   { emoji: "📚", x: "18%", y: "45%", size: "text-3xl", delay: 0.3, duration: 8 },
   { emoji: "🎨", x: "78%", y: "48%", size: "text-3xl", delay: 1.5, duration: 7.5 },
   { emoji: "✏️", x: "5%", y: "30%", size: "text-3xl", delay: 0.9, duration: 6 },
