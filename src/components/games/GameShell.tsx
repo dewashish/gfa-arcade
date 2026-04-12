@@ -15,15 +15,30 @@ import {
 import { useConfetti } from "@/hooks/useConfetti";
 import { useSound } from "@/hooks/useSound";
 
+interface StreakToast {
+  id: number;
+  name: string;
+  streak: number;
+}
+
 interface GameShellProps {
   children: React.ReactNode;
   title?: string;
   pinCode?: string;
   onMuteToggle?: () => void;
   muted?: boolean;
+  streakToasts?: StreakToast[];
+  onDismissStreak?: (id: number) => void;
 }
 
-export function GameShell({ children, title, pinCode, onMuteToggle, muted }: GameShellProps) {
+function streakEmoji(n: number) {
+  if (n >= 10) return "🌟";
+  if (n >= 8) return "⚡";
+  if (n >= 5) return "🔥🔥";
+  return "🔥";
+}
+
+export function GameShell({ children, title, pinCode, onMuteToggle, muted, streakToasts = [], onDismissStreak }: GameShellProps) {
   const {
     studentName,
     avatarId,
@@ -214,8 +229,42 @@ export function GameShell({ children, title, pinCode, onMuteToggle, muted }: Gam
               </motion.div>
             )}
 
+            {/* Scoring Rules Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_20px_40px_rgba(0,98,158,0.08)] text-left"
+            >
+              <p className="font-headline font-bold text-sm text-on-surface mb-3 text-center">
+                📋 How Scoring Works
+              </p>
+              <div className="space-y-2 text-sm font-body text-on-surface-variant">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">✅</span>
+                  <span>Correct answer: <strong className="text-on-surface">100 points</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">✏️</span>
+                  <span>Attempted: <strong className="text-on-surface">20 points</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">⏱️</span>
+                  <span>Answer fast for <strong className="text-on-surface">bonus points</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔥</span>
+                  <span>Get a streak for <strong className="text-on-surface">glory!</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">❌</span>
+                  <span>No negative points!</span>
+                </div>
+              </div>
+            </motion.div>
+
             {pinCode && (
-              <p className="text-sm text-on-surface-variant font-body">
+              <p className="text-sm text-on-surface-variant font-body mt-4">
                 Game PIN: <span className="font-headline font-black text-primary text-xl">{pinCode}</span>
               </p>
             )}
@@ -376,6 +425,33 @@ export function GameShell({ children, title, pinCode, onMuteToggle, muted }: Gam
           </motion.div>
         )}
       </main>
+
+      {/* Floating streak toasts — non-interfering, left side */}
+      <div className="fixed left-4 top-24 z-40 flex flex-col gap-2 pointer-events-none max-w-[260px]">
+        <AnimatePresence>
+          {streakToasts.slice(-4).map((toast) => (
+            <motion.div
+              key={toast.id}
+              initial={{ x: -200, opacity: 0, scale: 0.8 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
+              exit={{ x: -200, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              onAnimationComplete={() => {
+                setTimeout(() => onDismissStreak?.(toast.id), 3000);
+              }}
+              className="bg-white/90 backdrop-blur-xl rounded-full px-4 py-2 shadow-lg flex items-center gap-2 pointer-events-auto"
+            >
+              <span className="text-xl">{streakEmoji(toast.streak)}</span>
+              <span className="font-headline font-bold text-sm text-on-surface truncate">
+                {toast.name}
+              </span>
+              <span className="text-xs text-on-surface-variant font-body whitespace-nowrap">
+                {toast.streak} in a row!
+              </span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
