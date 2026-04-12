@@ -71,6 +71,15 @@ export async function createPlaylistSession(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated — cannot create a session.");
 
+  // Clean up old sessions from previous launches of this same plan.
+  // Without this, the monitor's activity strip shows both old finished
+  // sessions and new ones, making it look like duplicates.
+  await supabase
+    .from("game_sessions")
+    .delete()
+    .eq("class_plan_id", classPlanId)
+    .eq("teacher_id", user.id);
+
   // Generate a unique PIN for each activity in the playlist
   const usedPins = new Set<string>();
 
