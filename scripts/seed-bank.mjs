@@ -1073,6 +1073,54 @@ const ACTIVITIES = [
       { q: "The opposite of 'build' is ___.", options: ["destroy", "enjoy", "annoy", "royal"], correct: "destroy" },
     ], 25),
   },
+
+  // 7. Quiz: 'oy' Sound Visual Challenge (Hard — 20 questions with rich visuals)
+  {
+    title: "🔥 'oy' Sound Visual Challenge",
+    subject: "phonics",
+    topic: "oy sound",
+    description: "20 hard questions with pictures, word building, unscramble, sentence fill & more!",
+    difficulty: "hard",
+    config: quiz([
+      // --- 🖼️ Picture Match ---
+      { q: "🧸 What is this? Pick the 'oy' word.", options: ["toy", "toe", "two", "tie"], correct: "toy",
+        visual: { kind: "phonics-word", word: "toy", illustration: "toy" } },
+      { q: "👦 This is a young child. What word?", options: ["boy", "bay", "bow", "bee"], correct: "boy",
+        visual: { kind: "phonics-word", word: "boy", illustration: "boy" } },
+
+      // --- 🔤 Missing Sound (with picture hints) ---
+      { q: "🎉 You have fun at a party. Fill the gap: enj___", options: ["oy", "oi", "ay", "ey"], correct: "oy" },
+      { q: "💥 A wrecking ball does this. Fill: destr___", options: ["oy", "oi", "ay", "ey"], correct: "oy" },
+      { q: "😤 When someone bothers you. Fill: ann___", options: ["oy", "oi", "ey", "ay"], correct: "oy" },
+      { q: "👑 Like a king or queen. Fill: r___al", options: ["oy", "oi", "ay", "ea"], correct: "oy" },
+
+      // --- 🚫 Odd One Out (picture grids) ---
+      { q: "3 words have the /oy/ sound. Which does NOT belong?", options: ["🌙 moon", "👦 boy", "🧸 toy", "😊 joy"], correct: "🌙 moon" },
+      { q: "Which picture word does NOT have /oy/?", options: ["🤠 cowboy", "👑 royal", "🤝 loyal", "🐦 bird"], correct: "🐦 bird" },
+      { q: "Find the odd one out!", options: ["🎉 enjoy", "😤 annoy", "💥 destroy", "🌊 sea"], correct: "🌊 sea" },
+
+      // --- 📦 Sound Sort ---
+      { q: "Which box has ONLY 'oy' words?", options: ["joy, boy, toy", "joy, oil, toy", "boy, coin, toy", "toy, soil, joy"], correct: "joy, boy, toy" },
+      { q: "Which box has ONLY 'oy' words?", options: ["royal, loyal, enjoy", "royal, rain, enjoy", "loyal, loud, annoy", "enjoy, found, destroy"], correct: "royal, loyal, enjoy" },
+
+      // --- 🔨 Word Build ---
+      { q: "🧱 Build: c + ow + b + oy. What's the word?", options: ["cowboy", "cobwoy", "cowbay", "cobway"], correct: "cowboy" },
+      { q: "🧱 Build: d + e + str + oy. What's the word?", options: ["destroy", "destray", "distroi", "destory"], correct: "destroy" },
+      { q: "🧱 Build: v + oy + age. What's the word?", options: ["voyage", "voyige", "voiage", "voyaje"], correct: "voyage" },
+
+      // --- 🔀 Unscramble ---
+      { q: "🔀 Unscramble: y-o-j. Hint: 😊 a happy feeling!", options: ["joy", "yoj", "ojy", "jyo"], correct: "joy" },
+      { q: "🔀 Unscramble: l-a-y-o-r. Hint: 👑 like a king!", options: ["royal", "layro", "ryloa", "lorya"], correct: "royal" },
+
+      // --- 📝 Sentence Fill (with picture scenes) ---
+      { q: "👦 🧸 The ___ played with his favourite ___.", options: ["boy, toy", "bay, tay", "boi, toi", "buy, tuy"], correct: "boy, toy" },
+      { q: "🤠 🐴 The ___ rode his horse across the desert.", options: ["cowboy", "coybaw", "cobway", "cowboi"], correct: "cowboy" },
+      { q: "👨‍👩‍👧‍👦 🎢 We really ___ going to the theme park!", options: ["enjoy", "enjoi", "enjay", "enjow"], correct: "enjoy" },
+
+      // --- 🔢 Count the Sound ---
+      { q: "How many of these words have /oy/? boy, cat, royal, dog, annoy", options: ["3", "2", "4", "1"], correct: "3" },
+    ], 30),
+  },
 ];
 
 // ===== Run =====
