@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,6 @@ type ClassPlan = Database["public"]["Tables"]["class_plans"]["Row"];
 
 interface Props {
   activities: Activity[];
-  classPlans: ClassPlan[];
 }
 
 const GAME_TYPE_COLOR: Record<string, string> = {
@@ -32,13 +31,25 @@ const GAME_TYPE_COLOR: Record<string, string> = {
   "complete-sentence": "#00629E",
 };
 
-export function LibraryClient({ activities, classPlans }: Props) {
+export function LibraryClient({ activities }: Props) {
   const router = useRouter();
   const [sort, setSort] = useState<"recent" | "alpha">("recent");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
-  const [plans, setPlans] = useState(classPlans);
+  const [plans, setPlans] = useState<ClassPlan[]>([]);
+
+  // Fetch class plans client-side (RLS works correctly with browser auth)
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("class_plans")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setPlans(data as ClassPlan[]);
+      });
+  }, []);
 
   async function handleDeletePlan(planId: string) {
     if (!confirm("Delete this class plan?")) return;
