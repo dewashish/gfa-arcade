@@ -413,27 +413,49 @@ export function TeacherMonitorClient({ sessionId }: Props) {
               </div>
             )}
             </div>
-            {/* Answer status in presentation mode */}
-            {store.phase === "playing" && store.config?.type === "quiz" && (
-              <div className="px-8 py-3 bg-white/60 backdrop-blur-sm border-t border-outline-variant/10">
-                <div className="flex items-center gap-4 max-w-4xl mx-auto">
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm font-bold mb-1">
-                      <span className="text-on-surface-variant">
-                        {store.answeredStudentIds.length === participants && participants > 0 ? "✅ All in!" : "Answering..."}
-                      </span>
+            {/* Answer status in presentation mode — with student names */}
+            {store.phase === "playing" && store.config?.type === "quiz" && (() => {
+              const answeredSet = new Set(store.answeredStudentIds);
+              const answered = store.leaderboard.filter((e) => answeredSet.has(e.student_id));
+              const thinking = store.leaderboard.filter((e) => !answeredSet.has(e.student_id));
+              const allIn = thinking.length === 0 && store.leaderboard.length > 0;
+              return (
+                <div className="px-6 py-3 bg-white/70 backdrop-blur-sm border-t border-outline-variant/10">
+                  <div className="max-w-5xl mx-auto">
+                    <div className="flex justify-between text-sm font-bold mb-2">
+                      <span className="text-on-surface-variant">{allIn ? "✅ All in!" : "Answering..."}</span>
                       <span className="text-primary">{store.answeredStudentIds.length} / {participants}</span>
                     </div>
-                    <div className="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div className="h-2 bg-surface-container-highest rounded-full overflow-hidden mb-3">
                       <div
                         className="h-full bg-tertiary-container rounded-full transition-all duration-500"
                         style={{ width: `${participants > 0 ? (store.answeredStudentIds.length / participants) * 100 : 0}%` }}
                       />
                     </div>
+                    {thinking.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Still thinking:</span>
+                        {thinking.map((s) => (
+                          <span key={s.student_id} className="text-xs bg-error-container/30 text-on-surface px-2 py-0.5 rounded-full font-bold">
+                            {s.student_name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {answered.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Answered:</span>
+                        {answered.map((s) => (
+                          <span key={s.student_id} className="text-xs bg-tertiary-container/20 text-on-surface px-2 py-0.5 rounded-full font-bold">
+                            {s.student_name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </main>
 
           {store.leaderboard.length > 0 && (
@@ -818,7 +840,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
                               { id: "cat", emoji: "🐱" }, { id: "dog", emoji: "🐶" }, { id: "penguin", emoji: "🐧" },
                               { id: "bunny", emoji: "🐰" }, { id: "bear", emoji: "🐻" }, { id: "owl", emoji: "🦉" },
                               { id: "fox", emoji: "🦊" }, { id: "panda", emoji: "🐼" }, { id: "lion", emoji: "🦁" },
-                              { id: "unicorn", emoji: "🦄" }, { id: "dragon", emoji: "🐉" }, { id: "robot", emoji: "🤖" },
+                              { id: "falcon", emoji: "🦅" }, { id: "dragon", emoji: "🐉" }, { id: "robot", emoji: "🤖" },
                               { id: "astronaut", emoji: "🧑‍🚀" }, { id: "superhero", emoji: "🦸" },
                               { id: "star", emoji: "⭐" }, { id: "rocket", emoji: "🚀" },
                             ].find((a) => a.id === entry.avatar_id)?.emoji ?? "👤"

@@ -63,7 +63,7 @@ interface Props {
 
 const AVATAR_EMOJI: Record<string, string> = {
   cat: "🐱", dog: "🐶", penguin: "🐧", bunny: "🐰", bear: "🐻", owl: "🦉",
-  fox: "🦊", panda: "🐼", lion: "🦁", unicorn: "🦄", dragon: "🐉",
+  fox: "🦊", panda: "🐼", lion: "🦁", falcon: "🦅", dragon: "🐉",
   robot: "🤖", astronaut: "🧑‍🚀", superhero: "🦸", star: "⭐", rocket: "🚀",
 };
 

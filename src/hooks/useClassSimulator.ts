@@ -20,7 +20,7 @@ const FAKE_ROSTER: Array<{ name: string; avatar_id: string }> = [
   { name: "Sarah J.", avatar_id: "lion" },
   { name: "Leo W.", avatar_id: "dog" },
   { name: "Amir K.", avatar_id: "fox" },
-  { name: "Mia T.", avatar_id: "unicorn" },
+  { name: "Mia T.", avatar_id: "falcon" },
   { name: "Noah R.", avatar_id: "rocket" },
   { name: "Chloe C.", avatar_id: "panda" },
   { name: "Oliver S.", avatar_id: "robot" },

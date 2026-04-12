@@ -194,7 +194,7 @@ function BlankDropZone({ id, filledWord }: { id: number; filledWord?: string }) 
         }
       `}
     >
-      <span className="text-outline-variant text-sm">————</span>
+      <span className="block w-16 h-[3px] bg-outline-variant rounded-full" />
     </span>
   );
 }

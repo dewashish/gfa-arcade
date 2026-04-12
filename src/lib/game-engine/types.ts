@@ -300,7 +300,7 @@ export const AVATARS: AvatarOption[] = [
   { id: "fox", name: "Fox", emoji: "🦊", color: "#FF6D00" },
   { id: "panda", name: "Panda", emoji: "🐼", color: "#424242" },
   { id: "lion", name: "Lion", emoji: "🦁", color: "#FDD835" },
-  { id: "unicorn", name: "Unicorn", emoji: "🦄", color: "#E040FB" },
+  { id: "falcon", name: "Falcon", emoji: "🦅", color: "#E040FB" },
   { id: "dragon", name: "Dragon", emoji: "🐉", color: "#00C853" },
   { id: "robot", name: "Robot", emoji: "🤖", color: "#00629E" },
   { id: "astronaut", name: "Astronaut", emoji: "🧑‍🚀", color: "#6200EA" },

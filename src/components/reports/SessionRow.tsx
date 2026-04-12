@@ -21,7 +21,7 @@ const AVATAR_EMOJI: Record<string, string> = {
   fox: "🦊",
   panda: "🐼",
   lion: "🦁",
-  unicorn: "🦄",
+  falcon: "🦅",
   dragon: "🐉",
   robot: "🤖",
   astronaut: "🧑‍🚀",
