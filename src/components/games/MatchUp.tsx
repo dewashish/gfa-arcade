@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { useSound } from "@/hooks/useSound";
 import { useConfetti } from "@/hooks/useConfetti";
+import { StudentTimer } from "@/components/games/StudentTimer";
 import type { MatchUpConfig } from "@/lib/game-engine/types";
 
 interface MatchUpProps {
@@ -91,7 +92,7 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="w-full max-w-4xl mx-auto">
-        <div className="flex items-end justify-between mb-8 gap-4">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <motion.h2
             initial={{ opacity: 0, y: 20, rotate: 0 }}
             animate={{ opacity: 1, y: 0, rotate: -1 }}
@@ -100,9 +101,18 @@ export function MatchUp({ config, onAnswer }: MatchUpProps) {
           >
             Match the pairs!
           </motion.h2>
-          <span className="text-on-surface-variant font-headline font-black text-lg md:text-xl shrink-0">
-            {matched.size} / {config.pairs.length}
-          </span>
+          <div className="flex items-center gap-4 shrink-0">
+            <span className="text-on-surface-variant font-headline font-black text-lg md:text-xl">
+              {matched.size} / {config.pairs.length}
+            </span>
+            {config.time_limit_seconds && (
+              <StudentTimer
+                duration={config.time_limit_seconds}
+                running={!allMatched}
+                size="sm"
+              />
+            )}
+          </div>
         </div>
 
         {/* Responsive grid: single column on phones, 2 cols on md+ */}

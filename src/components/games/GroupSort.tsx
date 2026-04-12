@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { useSound } from "@/hooks/useSound";
 import { useConfetti } from "@/hooks/useConfetti";
+import { StudentTimer } from "@/components/games/StudentTimer";
 import type { GroupSortConfig } from "@/lib/game-engine/types";
 
 interface GroupSortProps {
@@ -109,7 +110,7 @@ export function GroupSort({ config, onAnswer }: GroupSortProps) {
       <div className="w-full max-w-4xl mx-auto">
         {/* Header + progress bar */}
         <div className="mb-8">
-          <div className="flex items-end justify-between gap-4 mb-3">
+          <div className="flex items-center justify-between gap-4 mb-3">
             <motion.h2
               initial={{ opacity: 0, y: 20, rotate: 0 }}
               animate={{ opacity: 1, y: 0, rotate: -1 }}
@@ -118,9 +119,18 @@ export function GroupSort({ config, onAnswer }: GroupSortProps) {
             >
               Sort into groups!
             </motion.h2>
-            <span className="font-headline font-black text-lg md:text-xl text-on-surface shrink-0">
-              {sortedCount} / {totalItems}
-            </span>
+            <div className="flex items-center gap-4 shrink-0">
+              <span className="font-headline font-black text-lg md:text-xl text-on-surface">
+                {sortedCount} / {totalItems}
+              </span>
+              {config.time_limit_seconds && (
+                <StudentTimer
+                  duration={config.time_limit_seconds}
+                  running={!allSorted}
+                  size="sm"
+                />
+              )}
+            </div>
           </div>
           <div className="h-2 rounded-full bg-surface-container-high overflow-hidden">
             <motion.div

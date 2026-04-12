@@ -6,6 +6,7 @@ import { useGameStore } from "@/stores/game-store";
 import { useSound } from "@/hooks/useSound";
 import { useConfetti } from "@/hooks/useConfetti";
 import { TimerRing } from "@/components/ui/TimerRing";
+import { StudentTimer } from "@/components/games/StudentTimer";
 import { VisualRegistry } from "@/components/games/visuals/VisualRegistry";
 import type { QuizConfig } from "@/lib/game-engine/types";
 
@@ -144,12 +145,19 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
             ))}
           </div>
         </div>
-        {isTeacher && (
+        {isTeacher ? (
           <TimerRing
             duration={timeLimit}
             running={!revealed}
             onComplete={handleRevealAnswer}
             size={80}
+          />
+        ) : (
+          <StudentTimer
+            key={currentQuestionIndex}
+            duration={timeLimit}
+            running={selectedAnswer === null}
+            size="md"
           />
         )}
       </div>
