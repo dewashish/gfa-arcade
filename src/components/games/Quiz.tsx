@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/stores/game-store";
 import { useSound } from "@/hooks/useSound";
@@ -51,7 +51,11 @@ const OPTION_STYLE = [
 export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps) {
   const { currentQuestionIndex, selectedAnswer, showResult } = useGameStore();
   const { setSelectedAnswer, setShowResult, addScore, incrementStreak, resetStreak } = useGameStore();
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  // Use a ref for start time so it persists across presentation mode
+  // toggles (which remount the Quiz component). Only reset when the
+  // question index actually advances, not on every mount.
+  const startTimeRef = useRef(Date.now());
+  const prevQuestionRef = useRef(currentQuestionIndex);
   const [revealed, setRevealed] = useState(false);
   const { play } = useSound();
   const { burst } = useConfetti();
@@ -61,17 +65,32 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
   const isLastQuestion = currentQuestionIndex >= config.questions.length - 1;
   const timeLimit = question?.time_limit_seconds ?? 30;
 
+  // Shuffle option order per question so the correct answer isn't always "A".
+  const shuffledOrder = useMemo(() => {
+    if (!question) return [];
+    const indices = question.options.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex, config]);
+
   useEffect(() => {
-    setQuestionStartTime(Date.now());
-    setRevealed(false);
-    lastTickRef.current = 0;
+    if (currentQuestionIndex !== prevQuestionRef.current) {
+      startTimeRef.current = Date.now();
+      prevQuestionRef.current = currentQuestionIndex;
+      setRevealed(false);
+      lastTickRef.current = 0;
+    }
   }, [currentQuestionIndex]);
 
   // Countdown ticking sound for last 3 seconds (teacher view only — too distracting on student handhelds)
   useEffect(() => {
     if (!isTeacher || revealed) return;
     const id = setInterval(() => {
-      const elapsed = (Date.now() - questionStartTime) / 1000;
+      const elapsed = (Date.now() - startTimeRef.current) / 1000;
       const remaining = Math.ceil(timeLimit - elapsed);
       if (remaining <= 3 && remaining > 0 && remaining !== lastTickRef.current) {
         play("countdown-low");
@@ -79,18 +98,21 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
       }
     }, 200);
     return () => clearInterval(id);
-  }, [isTeacher, revealed, questionStartTime, timeLimit, play]);
+  }, [isTeacher, revealed, startTimeRef.current, timeLimit, play]);
 
   if (!question) return null;
 
-  function handleSelectOption(optionIndex: number) {
+  // displayPos = position on screen (0-3). We translate to the ORIGINAL
+  // option index so correct_index comparisons work everywhere.
+  function handleSelectOption(displayPos: number) {
     if (selectedAnswer !== null || isTeacher || !question) return;
 
+    const optionIndex = shuffledOrder[displayPos]; // map back to original index
     setSelectedAnswer(optionIndex);
     setShowResult(true);
 
     const correct = optionIndex === question.correct_index;
-    const timeTaken = Date.now() - questionStartTime;
+    const timeTaken = Date.now() - startTimeRef.current;
 
     if (correct) {
       play("correct");
@@ -203,12 +225,13 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
             {question.question}
           </motion.h2>
 
-          {/* ===== Options Grid ===== */}
+          {/* ===== Options Grid (shuffled) ===== */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {question.options.map((option, oi) => {
-              const style = OPTION_STYLE[oi % OPTION_STYLE.length];
-              const isSelected = selectedAnswer === oi;
-              const isCorrect = oi === question.correct_index;
+            {shuffledOrder.map((origIdx, displayPos) => {
+              const option = question.options[origIdx];
+              const style = OPTION_STYLE[displayPos % OPTION_STYLE.length];
+              const isSelected = selectedAnswer === origIdx;
+              const isCorrect = origIdx === question.correct_index;
 
               let cardClass = `bg-surface-container-lowest ambient-shadow`;
               let letterClass = `${style.bg} ${style.text}`;
@@ -230,11 +253,11 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
 
               return (
                 <motion.button
-                  key={oi}
+                  key={origIdx}
                   whileTap={!showAnswerHighlight && !isTeacher ? { scale: 0.96 } : undefined}
                   whileHover={!showAnswerHighlight && !isTeacher ? { y: -4, scale: 1.01 } : undefined}
                   animate={{ opacity }}
-                  onClick={() => handleSelectOption(oi)}
+                  onClick={() => handleSelectOption(displayPos)}
                   disabled={selectedAnswer !== null || isTeacher}
                   className={`
                     p-6 rounded-xl text-left transition-colors
@@ -255,7 +278,7 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
                     ) : showAnswerHighlight && isSelected && !isCorrect ? (
                       <span className="material-symbols-outlined text-3xl">close</span>
                     ) : (
-                      String.fromCharCode(65 + oi)
+                      String.fromCharCode(65 + displayPos)
                     )}
                   </span>
                   <span className="font-body text-xl md:text-2xl font-bold text-on-surface flex-1">
@@ -318,7 +341,7 @@ export function Quiz({ config, isTeacher, onAnswer, onNextQuestion }: QuizProps)
           >
             {selectedAnswer === question.correct_index ? (
               <p className="font-headline font-black text-3xl text-tertiary">
-                ✨ Correct! +1,000 pts ✨
+                ✨ Correct! +100 pts ✨
               </p>
             ) : (
               <p className="font-headline font-black text-2xl text-error">

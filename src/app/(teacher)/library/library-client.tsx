@@ -66,10 +66,22 @@ export function LibraryClient({ activities }: Props) {
     try {
       const supabase = createClient();
       const { createPlaylistSession } = await import("@/lib/game-engine/session-manager");
-      const activities = (plan.activities as unknown as ClassPlanActivity[]) ?? [];
+      // Parse activities from JSONB — ensure we have activity_id on each
+      const rawActivities = (plan.activities ?? []) as unknown as Array<Record<string, unknown>>;
+      const activities = rawActivities
+        .filter((a) => a && typeof a.activity_id === "string")
+        .map((a) => ({ activity_id: a.activity_id as string }));
+
+      if (activities.length === 0) {
+        setLaunchError("This plan has no activities. Edit it to add some.");
+        setLaunchingId(null);
+        return;
+      }
+
       const firstSession = await createPlaylistSession(supabase, activities, plan.id);
       router.push(`/session/${firstSession.id}`);
     } catch (e) {
+      console.error("[library] launch plan failed:", e);
       setLaunchError(e instanceof Error ? e.message : "Launch failed");
       setLaunchingId(null);
     }
