@@ -47,7 +47,8 @@ export function ClassPrepTray() {
     }
   }
 
-  async function handleSavePlan() {
+  /** Saves the plan and returns the plan ID. */
+  async function handleSavePlan(): Promise<string> {
     setSaving(true);
     setError(null);
     try {
@@ -71,6 +72,7 @@ export function ClassPrepTray() {
           })
           .eq("id", store.planId);
         if (err) throw err;
+        return store.planId;
       } else {
         const { data, error: err } = await supabase
           .from("class_plans")
@@ -82,13 +84,14 @@ export function ClassPrepTray() {
           .select("id")
           .single();
         if (err) throw err;
-        if (data) {
-          store.loadPlan(data.id, store.planName, store.activities);
-        }
+        if (!data) throw new Error("No plan returned after save");
+        store.loadPlan(data.id, store.planName, store.activities);
+        return data.id;
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Save failed";
       setError(msg);
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -103,18 +106,15 @@ export function ClassPrepTray() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Save plan first if dirty
-      if (store.dirty || !store.planId) {
-        await handleSavePlan();
-      }
+      // Save plan first — always save to get a guaranteed plan ID
+      const planId = await handleSavePlan();
 
-      // For playlist, create a session for the FIRST activity.
-      // The monitor will handle advancing through the playlist.
+      // Create playlist sessions linked to this plan
       const { createPlaylistSession } = await import("@/lib/game-engine/session-manager");
       const firstSession = await createPlaylistSession(
         supabase,
         store.activities,
-        store.planId!
+        planId
       );
 
       startTransition(() => {
