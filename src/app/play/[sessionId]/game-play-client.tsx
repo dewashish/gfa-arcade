@@ -92,6 +92,14 @@ export function GamePlayClient({ sessionId }: Props) {
               store.setPhase("playing");
               play("join");
               break;
+            case "game:join":
+              // Another student joined — refresh leaderboard so the waiting
+              // lobby shows them in real-time.
+              supabase
+                .rpc("get_session_leaderboard", { p_session_id: sessionId })
+                .then(({ data }) => { if (data) store.setLeaderboard(data); });
+              play("pop");
+              break;
             case "game:spin":
               store.setSpinResult(event.angle, event.segmentIndex);
               break;

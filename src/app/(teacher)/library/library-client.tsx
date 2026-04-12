@@ -12,11 +12,14 @@ import { GAME_TYPE_LABELS } from "@/lib/bank/types";
 import { EMPTY_STATE_IMAGES } from "@/lib/bank/imagery";
 import { STAGGER, SPRING } from "@/lib/design/motion";
 import type { Database } from "@/lib/supabase/types";
+import type { ClassPlanActivity } from "@/lib/game-engine/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
+type ClassPlan = Database["public"]["Tables"]["class_plans"]["Row"];
 
 interface Props {
   activities: Activity[];
+  classPlans: ClassPlan[];
 }
 
 const GAME_TYPE_COLOR: Record<string, string> = {
@@ -29,11 +32,37 @@ const GAME_TYPE_COLOR: Record<string, string> = {
   "complete-sentence": "#00629E",
 };
 
-export function LibraryClient({ activities }: Props) {
+export function LibraryClient({ activities, classPlans }: Props) {
   const router = useRouter();
   const [sort, setSort] = useState<"recent" | "alpha">("recent");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
+  const [plans, setPlans] = useState(classPlans);
+
+  async function handleDeletePlan(planId: string) {
+    if (!confirm("Delete this class plan?")) return;
+    setDeletingPlanId(planId);
+    const supabase = createClient();
+    await supabase.from("class_plans").delete().eq("id", planId);
+    setPlans((prev) => prev.filter((p) => p.id !== planId));
+    setDeletingPlanId(null);
+  }
+
+  async function handleLaunchPlan(plan: ClassPlan) {
+    setLaunchingId(plan.id);
+    setLaunchError(null);
+    try {
+      const supabase = createClient();
+      const { createPlaylistSession } = await import("@/lib/game-engine/session-manager");
+      const activities = (plan.activities as unknown as ClassPlanActivity[]) ?? [];
+      const firstSession = await createPlaylistSession(supabase, activities, plan.id);
+      router.push(`/session/${firstSession.id}`);
+    } catch (e) {
+      setLaunchError(e instanceof Error ? e.message : "Launch failed");
+      setLaunchingId(null);
+    }
+  }
 
   const sorted = useMemo(() => {
     const arr = [...activities];
@@ -169,6 +198,87 @@ export function LibraryClient({ activities }: Props) {
             <span className="material-symbols-outlined">close</span>
           </button>
         </motion.div>
+      )}
+
+      {/* Class Plans Section */}
+      {plans.length > 0 && (
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="material-symbols-outlined text-primary">playlist_play</span>
+            <h2 className="font-headline font-bold text-lg text-on-surface">
+              My Class Plans
+            </h2>
+            <span className="text-sm text-on-surface-variant font-body">
+              ({plans.length})
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+            {plans.map((plan, idx) => {
+              const planActivities = (plan.activities as unknown as ClassPlanActivity[]) ?? [];
+              const isLaunching = launchingId === plan.id;
+              const isDeleting = deletingPlanId === plan.id;
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...SPRING.bouncy, delay: idx * 0.05 }}
+                  className="bg-surface-container-lowest rounded-xl p-5 shadow-[0_20px_40px_rgba(0,98,158,0.08)] flex flex-col gap-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-headline font-black text-base text-on-surface">
+                        {plan.name}
+                      </h3>
+                      <p className="text-xs text-on-surface-variant font-body mt-1">
+                        {planActivities.length} activit{planActivities.length === 1 ? "y" : "ies"}
+                        {" · "}
+                        Updated {new Date(plan.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeletePlan(plan.id)}
+                      disabled={isDeleting}
+                      className="p-1.5 rounded-full hover:bg-error-container transition-colors text-on-surface-variant hover:text-error"
+                      aria-label="Delete plan"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {isDeleting ? "progress_activity" : "delete"}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 mt-auto pt-2">
+                    <Link
+                      href={`/bank?plan=${plan.id}`}
+                      className="focus-ring flex-1 h-10 rounded-full bg-surface-container-low hover:bg-surface-container text-primary font-headline font-bold text-sm inline-flex items-center justify-center transition-colors gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-sm">edit</span>
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleLaunchPlan(plan)}
+                      disabled={isLaunching || planActivities.length === 0}
+                      className="focus-ring flex-[2] h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold text-sm shadow-md disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+                    >
+                      {isLaunching ? (
+                        <>
+                          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                          Starting...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                          Launch
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Grid */}

@@ -4,6 +4,7 @@ import { LibraryClient } from "./library-client";
 import type { Database } from "@/lib/supabase/types";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
+type ClassPlan = Database["public"]["Tables"]["class_plans"]["Row"];
 
 export default async function LibraryPage() {
   const supabase = await createClient();
@@ -12,11 +13,23 @@ export default async function LibraryPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("teacher_id", user.id)
-    .order("updated_at", { ascending: false });
+  const [activitiesRes, plansRes] = await Promise.all([
+    supabase
+      .from("activities")
+      .select("*")
+      .eq("teacher_id", user.id)
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("class_plans")
+      .select("*")
+      .eq("teacher_id", user.id)
+      .order("updated_at", { ascending: false }),
+  ]);
 
-  return <LibraryClient activities={(data ?? []) as Activity[]} />;
+  return (
+    <LibraryClient
+      activities={(activitiesRes.data ?? []) as Activity[]}
+      classPlans={(plansRes.data ?? []) as ClassPlan[]}
+    />
+  );
 }

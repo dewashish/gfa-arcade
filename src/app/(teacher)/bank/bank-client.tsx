@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -71,6 +71,49 @@ export function BankClient({ templates, fetchError }: Props) {
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const trayStore = useClassPrepStore();
+
+  // Load a saved plan from URL param (?plan=<id>)
+  useEffect(() => {
+    const planId = searchParams.get("plan");
+    if (!planId || trayStore.planId === planId) return;
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("class_plans")
+        .select("*")
+        .eq("id", planId)
+        .single();
+      if (!data) return;
+      const activities = (data.activities as unknown as Array<{
+        activity_id: string;
+        pacing: import("@/lib/game-engine/types").ActivityPacingConfig;
+        order: number;
+      }>) ?? [];
+      // Fetch activity details for each
+      const ids = activities.map((a) => a.activity_id);
+      const { data: actData } = await supabase
+        .from("activities")
+        .select("id, title, game_type, config_json")
+        .in("id", ids);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actMap = new Map((actData ?? []).map((a: any) => [a.id, a]));
+      const trayItems = activities
+        .sort((a, b) => a.order - b.order)
+        .map((a) => {
+          const act = actMap.get(a.activity_id);
+          return {
+            activity_id: a.activity_id,
+            title: act?.title ?? "Unknown",
+            game_type: act?.game_type ?? "quiz",
+            subject: act?.subject as string | null ?? null,
+            item_count: 0,
+            pacing: a.pacing,
+          };
+        });
+      trayStore.loadPlan(data.id, data.name, trayItems);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   function handleAddToTray(activity: BankActivity) {
     trayStore.addActivity({
