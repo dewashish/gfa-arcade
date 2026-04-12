@@ -430,55 +430,64 @@ export function TeacherMonitorClient({ sessionId }: Props) {
     );
   }
 
+  // ===== Accuracy rate (computed from answered data) =====
+  const totalAnswered = store.answeredStudentIds.length;
+  const accuracyPct = participants > 0
+    ? Math.round((totalAnswered / participants) * 100)
+    : 0;
+
+  // Game type icon mapping for playlist strip
+  const gameTypeIcon = (gt: string) => {
+    switch (gt) {
+      case "quiz": return "quiz";
+      case "match-up": return "grid_view";
+      case "group-sort": return "category";
+      case "flashcards": return "style";
+      case "spin-wheel": return "attractions";
+      case "speaking-cards": return "mic";
+      case "complete-sentence": return "edit_note";
+      default: return "gamepad";
+    }
+  };
+
+  // Medal colors for leaderboard
+  const medalColor = (rank: number) => {
+    if (rank === 1) return "text-amber-500";
+    if (rank === 2) return "text-slate-400";
+    if (rank === 3) return "text-orange-600";
+    return "text-on-surface-variant";
+  };
+
   // ===== Normal Mode =====
   return (
-    <div className="space-y-6">
-      {/* ===== Session Header ===== */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between flex-wrap gap-4"
-      >
-        <div>
-          <motion.h1
-            initial={{ rotate: 0 }}
-            animate={{ rotate: -1 }}
-            className="font-headline font-black text-3xl md:text-4xl text-primary origin-left"
-          >
+    <div>
+      {/* ===== FIXED TOP BAR ===== */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm flex justify-between items-center px-8 h-20 shadow-sm">
+        <div className="flex items-center gap-6">
+          <h1 className="text-2xl font-black tracking-tight text-primary rotate-[-2deg] font-headline">
             {activityTitle || "Live Session"}
-          </motion.h1>
-          <div className="flex items-center gap-3 mt-3 flex-wrap">
-            <div className="px-4 py-2 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center gap-2 shadow-md">
-              <span className="material-symbols-outlined text-base">tag</span>
-              <span className="font-headline font-black tracking-widest">{pinCode}</span>
-            </div>
-            <div className="px-4 py-2 rounded-full bg-tertiary text-on-tertiary flex items-center gap-2 shadow-md">
-              <span className="material-symbols-outlined text-base">groups</span>
-              <span className="font-bold">{participants} students</span>
-            </div>
-            <div className="px-4 py-2 rounded-full bg-surface-container-lowest ambient-shadow flex items-center gap-2">
-              <span className="material-symbols-outlined text-base">timer</span>
-              <span className="font-headline font-bold">{timer.formatTime()}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-low">
-              <div className="w-2 h-2 rounded-full bg-tertiary-container animate-pulse" />
-              <span className="text-xs text-on-surface-variant font-body font-bold">LIVE</span>
-            </div>
+          </h1>
+          <div className="flex items-center gap-3 bg-surface-container px-6 py-2 rounded-full">
+            <span className="text-on-surface-variant font-label text-sm uppercase tracking-widest">Join PIN</span>
+            <span className="text-3xl font-black font-headline text-primary tracking-tighter">{pinCode}</span>
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="ml-2 p-2 bg-primary-container text-white rounded-full hover:scale-105 transition-transform flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-base">share</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low">
+            <div className="w-2 h-2 rounded-full bg-tertiary-container animate-pulse" />
+            <span className="text-xs text-on-surface-variant font-body font-bold">LIVE</span>
           </div>
         </div>
 
-        <div className="flex gap-3 flex-wrap items-start">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowShareModal(true)}
-            className="focus-ring inline-flex items-center justify-center gap-2 h-11 px-5 font-headline font-bold text-sm text-on-secondary-container bg-secondary-container rounded-full shadow-md"
-          >
-            <span className="material-symbols-outlined text-base" aria-hidden="true">
-              share
-            </span>
-            Share with Class
-          </motion.button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-xl">
+            <span className="material-symbols-outlined text-primary text-base">timer</span>
+            <span className="font-headline font-bold text-xl text-primary">{timer.formatTime()}</span>
+          </div>
           <SimulateClassButton sessionId={sessionId} />
           {store.phase === "waiting" && (
             <motion.button
@@ -486,7 +495,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
               whileTap={{ scale: participants > 0 ? 0.95 : 1 }}
               disabled={participants === 0}
               onClick={handleStartGame}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 font-headline font-black text-lg text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 font-headline font-black text-lg text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg disabled:opacity-50 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined">play_arrow</span>
               Start Game
@@ -498,30 +507,29 @@ export function TeacherMonitorClient({ sessionId }: Props) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setPresentMode(true)}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 font-headline font-bold text-base text-on-secondary-container bg-secondary-container rounded-full shadow-md"
+                className="font-label font-medium text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
               >
-                <span className="material-symbols-outlined">present_to_all</span>
+                <span className="material-symbols-outlined text-base mr-1 align-middle">present_to_all</span>
                 Present
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleEndGame}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 font-headline font-bold text-base text-white bg-error rounded-full shadow-md"
+                className="bg-error text-on-error px-8 py-3 rounded-full font-headline font-bold text-base shadow-[0_20px_40px_rgba(0,98,158,0.08)] active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined">stop</span>
-                End Game
+                End Session
               </motion.button>
             </>
           )}
           {store.phase === "finished" && (
-            <>
+            <div className="flex items-center gap-3">
               {hasNextActivity && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleNextActivity}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 font-headline font-black text-lg text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3 font-headline font-black text-base text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg"
                 >
                   <span className="material-symbols-outlined">skip_next</span>
                   Next Activity
@@ -530,180 +538,326 @@ export function TeacherMonitorClient({ sessionId }: Props) {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push("/dashboard")}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 font-headline font-bold text-base text-primary bg-surface-container-low rounded-full"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 font-headline font-bold text-sm text-primary bg-surface-container-low rounded-full"
               >
-                <span className="material-symbols-outlined">arrow_back</span>
-                Back to Dashboard
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Dashboard
               </motion.button>
-            </>
+            </div>
           )}
         </div>
-      </motion.div>
+      </header>
 
-      {/* ===== Playlist Activity Strip ===== */}
-      {isPlaylist && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-surface-container-lowest rounded-[20px] p-4 ambient-shadow"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-base text-primary">playlist_play</span>
-            <span className="text-xs font-headline font-bold text-on-surface-variant uppercase tracking-widest">
-              Activity {currentPlaylistOrder + 1} of {playlistSiblings.length}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {playlistSiblings.map((sib, i) => {
-              const isCurrent = sib.playlist_order === currentPlaylistOrder;
-              const isDone = sib.status === "finished";
-              return (
-                <div key={sib.id} className="flex items-center gap-2 shrink-0">
-                  {i > 0 && (
-                    <span className="material-symbols-outlined text-xs text-outline-variant">
-                      arrow_forward
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (!isCurrent) router.push(`/session/${sib.id}`);
-                    }}
-                    className={`px-4 py-2 rounded-full text-xs font-headline font-bold transition-all ${
-                      isCurrent
-                        ? "bg-gradient-to-r from-primary to-primary-container text-white shadow-md ring-2 ring-primary/30"
-                        : isDone
-                          ? "bg-surface-container text-on-surface-variant line-through"
-                          : "bg-surface-container-low text-on-surface hover:bg-surface-container"
-                    }`}
-                  >
-                    {isDone && (
-                      <span className="material-symbols-outlined text-xs mr-1 align-middle">check</span>
-                    )}
-                    {sib.activities?.title ?? `Activity ${i + 1}`}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+      {/* ===== MAIN CONTENT ===== */}
+      <main className="pt-28 px-8 pb-12">
 
-      {/* ===== Main Split: Game + Leaderboard ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Game Area (2/3) */}
-        <div className="lg:col-span-2 space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+        {/* ===== PLAYLIST ACTIVITY STRIP ===== */}
+        {isPlaylist && (
+          <motion.section
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-surface-container-lowest rounded-xl p-6 md:p-10 ambient-shadow min-h-[500px] flex items-center justify-center"
+            className="mb-10"
           >
-            {store.phase === "waiting" && (
-              <div className="text-center">
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                  className="text-7xl mb-6"
-                >
-                  👥
-                </motion.div>
-                <h2 className="font-headline font-black text-3xl text-primary mb-2 -rotate-1">
-                  Waiting for students...
-                </h2>
-                <p className="text-on-surface-variant font-body text-lg">
-                  Share PIN
-                </p>
-                <p className="font-headline font-black text-6xl text-primary tracking-widest my-4">
-                  {pinCode}
-                </p>
-                <p className="text-sm text-on-surface-variant font-body">
-                  {participants} student{participants !== 1 ? "s" : ""} joined so far
-                </p>
+            <div className="flex items-center justify-between mb-4 px-2">
+              <h2 className="font-headline font-bold text-on-surface-variant uppercase tracking-widest text-sm">
+                Playlist Progress · Activity {currentPlaylistOrder + 1} of {playlistSiblings.length}
+              </h2>
+              <div className="flex items-center gap-1">
+                {playlistSiblings.map((sib) => (
+                  <div
+                    key={sib.id}
+                    className={`w-2 h-2 rounded-full ${
+                      sib.playlist_order <= currentPlaylistOrder
+                        ? "bg-primary"
+                        : "bg-surface-container-highest"
+                    }`}
+                  />
+                ))}
               </div>
-            )}
+            </div>
+            <div className="flex items-center gap-4 overflow-x-auto pb-4">
+              {playlistSiblings.map((sib, i) => {
+                const isCurrent = sib.playlist_order === currentPlaylistOrder;
+                const isDone = sib.status === "finished";
+                const gt = sib.activities?.game_type ?? "quiz";
+                return (
+                  <div key={sib.id} className="flex items-center gap-3 shrink-0">
+                    {i > 0 && (
+                      <span className="material-symbols-outlined text-outline-variant text-base">chevron_right</span>
+                    )}
+                    <button
+                      onClick={() => { if (!isCurrent) router.push(`/session/${sib.id}`); }}
+                      className={`min-w-[240px] rounded-xl p-5 flex items-center gap-4 transition-all ${
+                        isCurrent
+                          ? "min-w-[280px] bg-surface-container-lowest p-6 border-2 border-primary-container shadow-[0_0_25px_rgba(46,151,230,0.3)] relative overflow-hidden"
+                          : isDone
+                            ? "bg-surface-container opacity-60"
+                            : "bg-surface-container-low hover:bg-surface-container"
+                      }`}
+                    >
+                      {isCurrent && (
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-primary-container/10 rounded-bl-full flex items-center justify-center">
+                          <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
+                        </div>
+                      )}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isDone
+                          ? "bg-tertiary-container text-white"
+                          : isCurrent
+                            ? "bg-primary-container text-white w-14 h-14"
+                            : "bg-surface-container-highest text-on-surface-variant"
+                      }`}>
+                        <span className="material-symbols-outlined" style={isDone ? {} : { fontVariationSettings: "'FILL' 1" }}>
+                          {isDone ? "check" : gameTypeIcon(gt)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className={`text-xs font-bold uppercase ${isCurrent ? "text-primary" : "text-on-surface-variant"}`}>
+                          {isCurrent ? "Current" : isDone ? gt : gt}
+                        </p>
+                        <h4 className={`font-headline font-bold ${isCurrent ? "text-lg" : ""}`}>
+                          {sib.activities?.title ?? `Activity ${i + 1}`}
+                        </h4>
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+        )}
 
-            {store.phase === "playing" && renderGame()}
+        {/* ===== 8/4 GRID LAYOUT ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {store.phase === "finished" && (
-              <div className="text-center">
-                <div className="text-8xl mb-4">🏆</div>
-                <h2 className="font-headline font-black text-4xl text-primary mb-2 -rotate-1">
-                  Game Complete!
-                </h2>
-                {winnerName && (
-                  <p className="font-headline text-2xl text-secondary mt-4">
-                    🥇 {winnerName} — {winnerScore.toLocaleString()} pts
+          {/* ===== LEFT: GAME AREA (col-span-8) ===== */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-surface-container-lowest rounded-xl p-6 md:p-10 shadow-[0_20px_40px_rgba(0,98,158,0.08)] min-h-[500px] flex items-center justify-center relative"
+            >
+              {/* ===== WAITING STATE ===== */}
+              {store.phase === "waiting" && (
+                <div className="text-center">
+                  <motion.div
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    className="text-7xl mb-6"
+                  >
+                    👥
+                  </motion.div>
+                  <h2 className="font-headline font-black text-3xl text-primary mb-2 -rotate-1">
+                    Waiting for students...
+                  </h2>
+                  <p className="text-on-surface-variant font-body text-lg">Share PIN</p>
+                  <p className="font-headline font-black text-6xl text-primary tracking-widest my-4">{pinCode}</p>
+                  <p className="text-sm text-on-surface-variant font-body">
+                    {participants} student{participants !== 1 ? "s" : ""} joined so far
                   </p>
-                )}
-                <div className="flex items-center justify-center gap-3 flex-wrap mt-6">
-                  <button
-                    onClick={() => setShowCelebration(true)}
-                    className="px-6 py-3 rounded-full bg-secondary-container text-on-secondary-container font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform"
-                  >
-                    <span className="material-symbols-outlined">celebration</span>
-                    Show Celebration
-                  </button>
-                  <button
-                    onClick={() => setShowCertificatesModal(true)}
-                    className="px-6 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform shadow-md"
-                  >
-                    <span className="material-symbols-outlined">workspace_premium</span>
-                    Certificates
-                  </button>
+                </div>
+              )}
+
+              {/* ===== PLAYING STATE ===== */}
+              {store.phase === "playing" && renderGame()}
+
+              {/* ===== FINISHED STATE ===== */}
+              {store.phase === "finished" && (
+                <div className="text-center">
+                  <div className="text-8xl mb-4">🏆</div>
+                  <h2 className="font-headline font-black text-4xl text-primary mb-2 -rotate-1">
+                    Game Complete!
+                  </h2>
+                  {winnerName && (
+                    <p className="font-headline text-2xl text-secondary mt-4">
+                      🥇 {winnerName} — {winnerScore.toLocaleString()} pts
+                    </p>
+                  )}
+                  <div className="flex items-center justify-center gap-3 flex-wrap mt-6">
+                    <button
+                      onClick={() => setShowCelebration(true)}
+                      className="px-6 py-3 rounded-full bg-secondary-container text-on-secondary-container font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform"
+                    >
+                      <span className="material-symbols-outlined">celebration</span>
+                      Show Celebration
+                    </button>
+                    <button
+                      onClick={() => setShowCertificatesModal(true)}
+                      className="px-6 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-headline font-bold inline-flex items-center gap-2 hover:scale-105 transition-transform shadow-md"
+                    >
+                      <span className="material-symbols-outlined">workspace_premium</span>
+                      Certificates
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Student progress bar (playing phase) */}
+            {store.phase === "playing" && participants > 0 && (
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex justify-between text-sm font-bold mb-2">
+                    <span className="text-on-surface-variant">Student Progress</span>
+                    <span className="text-primary">{totalAnswered} of {participants} answered</span>
+                  </div>
+                  <div className="h-4 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-tertiary-container rounded-full transition-all duration-500 relative"
+                      style={{ width: `${participants > 0 ? (totalAnswered / participants) * 100 : 0}%` }}
+                    >
+                      <div
+                        className="absolute inset-0 animate-pulse opacity-30"
+                        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)" }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
-          </motion.div>
 
-          {/* Answered / still-thinking split while a quiz is running */}
-          {store.phase === "playing" && store.config?.type === "quiz" && (
-            <AnswerStatusPanel onStudentClick={setSelectedStudentId} />
-          )}
-        </div>
+            {/* Answered / still-thinking split while a quiz is running */}
+            {store.phase === "playing" && store.config?.type === "quiz" && (
+              <AnswerStatusPanel onStudentClick={setSelectedStudentId} />
+            )}
 
-        {/* Leaderboard (1/3) */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-3"
-        >
-          {/* View toggle */}
-          <div
-            role="radiogroup"
-            aria-label="Leaderboard view"
-            className="flex bg-surface-container-low rounded-full p-1 ambient-shadow"
+            {/* Pacing info + Next Activity */}
+            {isPlaylist && (
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-6 text-on-surface-variant font-medium text-sm">
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">schedule</span>
+                    Activity {currentPlaylistOrder + 1} of {playlistSiblings.length}
+                  </span>
+                </div>
+                {store.phase === "finished" && hasNextActivity && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleNextActivity}
+                    className="bg-gradient-to-r from-primary to-primary-container text-white px-10 py-4 rounded-full font-headline font-bold shadow-[0_20px_40px_rgba(0,98,158,0.08)] active:scale-95 transition-all"
+                  >
+                    Next Activity →
+                  </motion.button>
+                )}
+                {store.phase !== "finished" && (
+                  <button
+                    className="bg-surface-container-highest text-outline-variant px-10 py-4 rounded-full font-headline font-bold cursor-not-allowed"
+                    disabled
+                  >
+                    Next Activity
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ===== RIGHT: SIDEBAR (col-span-4) ===== */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-4 flex flex-col gap-6"
           >
-            {[
-              { key: "podium", label: "🏆 Podium" },
-              { key: "list", label: "📋 List" },
-            ].map((opt) => (
-              <button
-                key={opt.key}
-                role="radio"
-                aria-checked={leaderboardView === opt.key}
-                onClick={() => setLeaderboardView(opt.key as "podium" | "list")}
-                className={`focus-ring flex-1 h-10 rounded-full font-headline font-bold text-sm transition-colors ${
-                  leaderboardView === opt.key
-                    ? "bg-gradient-to-br from-primary to-primary-container text-white shadow-md"
-                    : "text-on-surface-variant hover:text-primary"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+            {/* Students Online + Mini Leaderboard */}
+            <div className="bg-surface-container-low rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-tertiary shadow-[0_0_8px_rgba(0,163,150,0.5)]" />
+                  <h3 className="font-headline font-bold text-lg">{participants} Students Online</h3>
+                </div>
+                <span className="material-symbols-outlined text-on-surface-variant">group</span>
+              </div>
 
-          <div className="bg-surface-container-lowest rounded-xl p-5 ambient-shadow max-h-[75vh] overflow-y-auto">
-            <LiveLeaderboard
-              variant={leaderboardView === "podium" ? "full" : "compact"}
-              onRowClick={setSelectedStudentId}
-            />
-          </div>
-        </motion.div>
-      </div>
+              {/* Mini Leaderboard — top 5 */}
+              <div className="space-y-3 mb-8">
+                {store.leaderboard.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant text-center py-4 font-body">
+                    Waiting for players to join...
+                  </p>
+                ) : (
+                  store.leaderboard.slice(0, 5).map((entry, idx) => {
+                    const rank = idx + 1;
+                    const avatarEmoji =
+                      entry.avatar_id
+                        ? (
+                            // eslint-disable-next-line @typescript-eslint/no-var-requires
+                            [
+                              { id: "cat", emoji: "🐱" }, { id: "dog", emoji: "🐶" }, { id: "penguin", emoji: "🐧" },
+                              { id: "bunny", emoji: "🐰" }, { id: "bear", emoji: "🐻" }, { id: "owl", emoji: "🦉" },
+                              { id: "fox", emoji: "🦊" }, { id: "panda", emoji: "🐼" }, { id: "lion", emoji: "🦁" },
+                              { id: "unicorn", emoji: "🦄" }, { id: "dragon", emoji: "🐉" }, { id: "robot", emoji: "🤖" },
+                              { id: "astronaut", emoji: "🧑‍🚀" }, { id: "superhero", emoji: "🦸" },
+                              { id: "star", emoji: "⭐" }, { id: "rocket", emoji: "🚀" },
+                            ].find((a) => a.id === entry.avatar_id)?.emoji ?? "👤"
+                          )
+                        : "👤";
+                    return (
+                      <button
+                        key={entry.student_id}
+                        onClick={() => setSelectedStudentId(entry.student_id)}
+                        className={`w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-white/80 transition-colors text-left ${
+                          rank <= 3 ? "bg-white/50" : ""
+                        }`}
+                      >
+                        <span className={`font-black italic w-4 text-sm ${medalColor(rank)}`}>{rank}</span>
+                        <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-lg">
+                          {avatarEmoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm truncate">{entry.student_name}</p>
+                          <p className="text-xs text-on-surface-variant">{entry.total_score.toLocaleString()} pts</p>
+                        </div>
+                        {rank <= 3 && (
+                          <span
+                            className={`material-symbols-outlined ${medalColor(rank)}`}
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                          >
+                            workspace_premium
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
 
+              {/* Accuracy Rate */}
+              {store.phase === "playing" && (
+                <div className="border-t border-outline-variant/20 pt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-headline font-bold">Response Rate</h4>
+                    <span className="text-2xl font-black font-headline text-tertiary">{accuracyPct}%</span>
+                  </div>
+                  <div className="h-6 bg-surface-container-highest rounded-full overflow-hidden p-1">
+                    <div
+                      className="h-full bg-tertiary-container rounded-full transition-all duration-500"
+                      style={{ width: `${accuracyPct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-3 text-center">
+                    {totalAnswered === participants && participants > 0
+                      ? "Everyone has answered!"
+                      : `${participants - totalAnswered} still thinking...`}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Branding Card */}
+            <div className="bg-primary rounded-xl p-8 text-on-primary shadow-[0_20px_40px_rgba(0,98,158,0.08)] relative overflow-hidden flex flex-col items-center justify-center text-center">
+              <div className="relative z-10">
+                <div className="text-3xl font-black font-headline mb-2">Founders Arcade</div>
+                <p className="font-medium text-primary-fixed">Interactive Session Monitor</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+
+      {/* ===== MODALS (unchanged) ===== */}
       <CelebrationOverlay
         open={showCelebration}
         title={winnerName ? `${winnerName} wins!` : "Game Over!"}
@@ -711,7 +865,6 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         onDismiss={() => setShowCelebration(false)}
       />
 
-      {/* Feature 3: per-student answer history modal */}
       <StudentDetailModal
         open={!!selectedStudentId}
         sessionId={sessionId}
@@ -720,7 +873,6 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         onClose={() => setSelectedStudentId(null)}
       />
 
-      {/* Feature 4: teacher-side certificate bulk preview / download */}
       <CertificatesPreviewModal
         open={showCertificatesModal}
         activityTitle={activityTitle}
