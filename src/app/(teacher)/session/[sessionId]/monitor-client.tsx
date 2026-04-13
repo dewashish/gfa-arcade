@@ -279,9 +279,14 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   }
 
   function handleNextQuestion() {
-    const config = store.config as QuizConfig;
+    if (!store.config) return;
     const next = store.currentQuestionIndex + 1;
-    if (next >= config.questions.length) {
+    // Both QuizConfig and HalvingConfig have a `questions` array
+    const totalQuestions =
+      store.config.type === "quiz" || store.config.type === "halving"
+        ? (store.config as { questions: unknown[] }).questions.length
+        : store.totalRounds;
+    if (next >= totalQuestions) {
       handleEndGame();
       return;
     }
