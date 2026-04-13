@@ -175,7 +175,12 @@ export function Halving({ config, isTeacher, onAnswer, onNextQuestion }: Halving
       multiSelections.size === correctSet.size &&
       [...multiSelections].every((i) => correctSet.has(i));
 
-    scoreAndReport(isCorrect, multiSelections.size);
+    // Encode selected indices as a bitmask so selected_index stores
+    // *which* choices were picked, not just the count.
+    // e.g. selecting indices 0 and 2 → 0b0101 = 5
+    let bitmask = 0;
+    for (const idx of multiSelections) bitmask |= 1 << idx;
+    scoreAndReport(isCorrect, bitmask);
   }
 
   function handleRevealAnswer() {
