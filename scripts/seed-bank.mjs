@@ -102,14 +102,21 @@ function halving(questions, time_limit_seconds = 20) {
     type: "halving",
     questions: questions.map((q) => ({
       mode: q.mode,
-      object: q.object,
-      total: q.total,
+      ...(q.object ? { object: q.object } : {}),
+      ...(q.total != null ? { total: q.total } : {}),
       ...(q.leftGroup != null ? { leftGroup: q.leftGroup } : {}),
       ...(q.rightGroup != null ? { rightGroup: q.rightGroup } : {}),
       ...(q.isCorrectSplit != null ? { isCorrectSplit: q.isCorrectSplit } : {}),
       ...(q.options ? { options: q.options } : {}),
       correctAnswer: q.correctAnswer,
       ...(q.hint ? { hint: q.hint } : {}),
+      // shape-half mode fields
+      ...(q.shape ? { shape: q.shape } : {}),
+      ...(q.pattern ? { pattern: q.pattern } : {}),
+      ...(q.perspective3d ? { perspective3d: q.perspective3d } : {}),
+      // multi-select mode fields
+      ...(q.choices ? { choices: q.choices } : {}),
+      ...(q.prompt ? { prompt: q.prompt } : {}),
       time_limit_seconds,
     })),
   };
