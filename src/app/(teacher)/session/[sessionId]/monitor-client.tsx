@@ -11,6 +11,7 @@ import { useSound } from "@/hooks/useSound";
 import { useTimer } from "@/hooks/useTimer";
 import { SpinWheel } from "@/components/games/SpinWheel";
 import { Quiz } from "@/components/games/Quiz";
+import { Halving } from "@/components/games/Halving";
 import { LiveLeaderboard } from "@/components/shared/LiveLeaderboard";
 import { CelebrationOverlay } from "@/components/shared/CelebrationOverlay";
 import { ShareWithClassModal } from "@/components/shared/ShareWithClassModal";
@@ -22,6 +23,7 @@ import type {
   ActivityConfig,
   SpinWheelConfig,
   QuizConfig,
+  HalvingConfig,
 } from "@/lib/game-engine/types";
 
 /** Playlist sibling session shape fetched when the current session
@@ -354,6 +356,16 @@ export function TeacherMonitorClient({ sessionId }: Props) {
         />
       );
     }
+    if (store.config.type === "halving") {
+      return (
+        <Halving
+          config={store.config as HalvingConfig}
+          isTeacher
+          onAnswer={() => {}}
+          onNextQuestion={handleNextQuestion}
+        />
+      );
+    }
     return (
       <div className="text-center py-12">
         <span className="text-6xl block mb-4">👀</span>
@@ -485,6 +497,7 @@ export function TeacherMonitorClient({ sessionId }: Props) {
   const gameTypeIcon = (gt: string) => {
     switch (gt) {
       case "quiz": return "quiz";
+      case "halving": return "content_cut";
       case "match-up": return "grid_view";
       case "group-sort": return "category";
       case "flashcards": return "style";

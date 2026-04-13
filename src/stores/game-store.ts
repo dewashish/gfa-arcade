@@ -87,7 +87,7 @@ export const useGameStore = create<GameState>((set) => ({
     const totalRounds =
       config.type === "spin-wheel"
         ? config.rounds
-        : config.type === "quiz"
+        : config.type === "quiz" || config.type === "halving"
           ? config.questions.length
           : config.type === "match-up"
             ? config.pairs.length

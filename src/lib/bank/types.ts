@@ -29,6 +29,7 @@ export const GAME_TYPE_LABELS: Record<string, { label: string; emoji: string }> 
   "speaking-cards": { label: "Speaking", emoji: "🎤" },
   "group-sort": { label: "Group Sort", emoji: "🗂️" },
   "complete-sentence": { label: "Sentence", emoji: "📝" },
+  halving: { label: "Halving", emoji: "✂️" },
 };
 
 export function countActivityItems(config: ActivityConfig): number {
@@ -47,5 +48,7 @@ export function countActivityItems(config: ActivityConfig): number {
       return config.groups.length;
     case "complete-sentence":
       return config.sentences.length;
+    case "halving":
+      return config.questions.length;
   }
 }
