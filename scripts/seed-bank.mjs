@@ -97,6 +97,24 @@ function completeSentence(sentences) {
   };
 }
 
+function halving(questions, time_limit_seconds = 20) {
+  return {
+    type: "halving",
+    questions: questions.map((q) => ({
+      mode: q.mode,
+      object: q.object,
+      total: q.total,
+      ...(q.leftGroup != null ? { leftGroup: q.leftGroup } : {}),
+      ...(q.rightGroup != null ? { rightGroup: q.rightGroup } : {}),
+      ...(q.isCorrectSplit != null ? { isCorrectSplit: q.isCorrectSplit } : {}),
+      ...(q.options ? { options: q.options } : {}),
+      correctAnswer: q.correctAnswer,
+      ...(q.hint ? { hint: q.hint } : {}),
+      time_limit_seconds,
+    })),
+  };
+}
+
 // ===== 25 Activities =====
 
 const ACTIVITIES = [
@@ -1116,6 +1134,158 @@ const ACTIVITIES = [
       { q: "How many have /oy/? boy, cat, royal, dog, annoy, oyster", options: ["4", "3", "5", "2"], correct: "4" },
       { q: "How many /oy/ words? enjoy, rain, voyage, bird, loyal, sea", options: ["3", "2", "4", "1"], correct: "3" },
     ], 30),
+  },
+
+  // ============== MATHS — HALVING ==============
+  {
+    title: "✂️ Half of a Quantity — Halving Station",
+    subject: "maths",
+    topic: "Recognise a half of a quantity",
+    description:
+      "Interactive halving activity: tap to split objects, find half of a number, and judge true/false splits. Based on White Rose Maths Y1 Summer Block 2.",
+    difficulty: "medium",
+    config: halving([
+      // --- EASY: small even numbers ---
+      // Q1: Tap-to-split — 4 stars
+      {
+        mode: "tap-to-split",
+        object: "star",
+        total: 4,
+        correctAnswer: 2,
+        hint: "Split these stars into two equal groups.",
+      },
+      // Q2: True/False — 6 cookies split 3|3 (correct)
+      {
+        mode: "true-false",
+        object: "cookie",
+        total: 6,
+        leftGroup: 3,
+        rightGroup: 3,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "Are these cookies shared equally?",
+      },
+      // Q3: Find-half — half of 6
+      {
+        mode: "find-half",
+        object: "apple",
+        total: 6,
+        options: [2, 3, 4, 5],
+        correctAnswer: 3,
+      },
+      // Q4: Tap-to-split — 8 hearts
+      {
+        mode: "tap-to-split",
+        object: "heart",
+        total: 8,
+        correctAnswer: 4,
+        hint: "Tap exactly half the hearts!",
+      },
+      // Q5: True/False — 10 dots split 4|6 (incorrect!)
+      {
+        mode: "true-false",
+        object: "dot",
+        total: 10,
+        leftGroup: 4,
+        rightGroup: 6,
+        isCorrectSplit: false,
+        correctAnswer: 0,
+        hint: "Has this been halved correctly?",
+      },
+
+      // --- MEDIUM: larger numbers ---
+      // Q6: Find-half — half of 12
+      {
+        mode: "find-half",
+        object: "cookie",
+        total: 12,
+        options: [4, 5, 6, 8],
+        correctAnswer: 6,
+      },
+      // Q7: Tap-to-split — 10 balloons
+      {
+        mode: "tap-to-split",
+        object: "balloon",
+        total: 10,
+        correctAnswer: 5,
+        hint: "Pop exactly half the balloons!",
+      },
+      // Q8: True/False — 8 stars split 4|4 (correct)
+      {
+        mode: "true-false",
+        object: "star",
+        total: 8,
+        leftGroup: 4,
+        rightGroup: 4,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "Look carefully — are both groups equal?",
+      },
+      // Q9: Find-half — half of 14
+      {
+        mode: "find-half",
+        object: "heart",
+        total: 14,
+        options: [6, 7, 8, 9],
+        correctAnswer: 7,
+      },
+      // Q10: Tap-to-split — 6 cookies
+      {
+        mode: "tap-to-split",
+        object: "cookie",
+        total: 6,
+        correctAnswer: 3,
+        hint: "Share these cookies equally — tap half!",
+      },
+
+      // --- HARD: bigger numbers + tricky splits ---
+      // Q11: Find-half — half of 16
+      {
+        mode: "find-half",
+        object: "star",
+        total: 16,
+        options: [6, 7, 8, 9],
+        correctAnswer: 8,
+      },
+      // Q12: True/False — 12 apples split 5|7 (incorrect)
+      {
+        mode: "true-false",
+        object: "apple",
+        total: 12,
+        leftGroup: 5,
+        rightGroup: 7,
+        isCorrectSplit: false,
+        correctAnswer: 0,
+        hint: "Count each group carefully!",
+      },
+      // Q13: Tap-to-split — 12 stars
+      {
+        mode: "tap-to-split",
+        object: "star",
+        total: 12,
+        correctAnswer: 6,
+        hint: "This is a big group — find exactly half!",
+      },
+      // Q14: Find-half — half of 20
+      {
+        mode: "find-half",
+        object: "balloon",
+        total: 20,
+        options: [8, 9, 10, 12],
+        correctAnswer: 10,
+      },
+      // Q15: True/False — 14 hearts split 7|7 (correct — tricky big number)
+      {
+        mode: "true-false",
+        object: "heart",
+        total: 14,
+        leftGroup: 7,
+        rightGroup: 7,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "Both groups look big — are they really equal?",
+      },
+    ]),
   },
 ];
 

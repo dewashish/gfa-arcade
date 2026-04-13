@@ -17,11 +17,13 @@ import { FlashCards } from "@/components/games/FlashCards";
 import { SpeakingCards } from "@/components/games/SpeakingCards";
 import { CompleteSentence } from "@/components/games/CompleteSentence";
 import { GroupSort } from "@/components/games/GroupSort";
+import { Halving } from "@/components/games/Halving";
 import type {
   ActivityConfig,
   SpinWheelConfig,
   MatchUpConfig,
   QuizConfig,
+  HalvingConfig,
   GameEvent,
 } from "@/lib/game-engine/types";
 
@@ -223,9 +225,11 @@ export function GamePlayClient({ sessionId }: Props) {
     const configTimeLimit =
       store.config.type === "quiz"
         ? (store.config.questions?.[questionIndex]?.time_limit_seconds ?? 30) * 1000
-        : store.config.type === "match-up" || store.config.type === "group-sort"
-          ? ((store.config as { time_limit_seconds?: number }).time_limit_seconds ?? 90) * 1000
-          : 30000;
+        : store.config.type === "halving"
+          ? ((store.config as HalvingConfig).questions?.[questionIndex]?.time_limit_seconds ?? 20) * 1000
+          : store.config.type === "match-up" || store.config.type === "group-sort"
+            ? ((store.config as { time_limit_seconds?: number }).time_limit_seconds ?? 90) * 1000
+            : 30000;
 
     const score = calculateScore({
       gameType: store.config.type,
@@ -318,6 +322,16 @@ export function GamePlayClient({ sessionId }: Props) {
             config={store.config as import("@/lib/game-engine/types").GroupSortConfig}
             onAnswer={(ii, correct, timeTakenMs) =>
               submitScore(ii, correct, timeTakenMs, { selectedIndex: ii })
+            }
+          />
+        );
+      case "halving":
+        return (
+          <Halving
+            config={store.config as HalvingConfig}
+            isTeacher={false}
+            onAnswer={(qi, selected, correct, timeTakenMs) =>
+              submitScore(qi, correct, timeTakenMs, { selectedIndex: selected })
             }
           />
         );

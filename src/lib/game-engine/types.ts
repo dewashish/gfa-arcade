@@ -1,6 +1,6 @@
 // ===== Game Types =====
 
-export type GameType = "spin-wheel" | "match-up" | "quiz" | "flashcards" | "speaking-cards" | "complete-sentence" | "group-sort";
+export type GameType = "spin-wheel" | "match-up" | "quiz" | "flashcards" | "speaking-cards" | "complete-sentence" | "group-sort" | "halving";
 
 export type GamePhase = "waiting" | "playing" | "round_result" | "finished";
 
@@ -195,6 +195,34 @@ export type GroupSortConfig = {
   time_limit_seconds?: number;
 };
 
+export type HalvingQuestionMode = "tap-to-split" | "find-half" | "true-false";
+
+export type HalvingConfig = {
+  type: "halving";
+  questions: Array<{
+    /** Interaction mode for this question. */
+    mode: HalvingQuestionMode;
+    /** Which emoji object to render. */
+    object: "apple" | "star" | "cookie" | "balloon" | "heart" | "dot";
+    /** Total number of objects shown. */
+    total: number;
+    /** For true-false: how many in the left group. */
+    leftGroup?: number;
+    /** For true-false: how many in the right group. */
+    rightGroup?: number;
+    /** For true-false: whether the split is correct (equal halves). */
+    isCorrectSplit?: boolean;
+    /** For find-half: multiple choice options (numbers). */
+    options?: number[];
+    /** The correct answer — half of total (for find-half/tap-to-split),
+     *  or 1 = true / 0 = false (for true-false). */
+    correctAnswer: number;
+    /** Hint text shown above the question (optional). */
+    hint?: string;
+    time_limit_seconds?: number;
+  }>;
+};
+
 export type ActivityConfig =
   | SpinWheelConfig
   | MatchUpConfig
@@ -202,7 +230,8 @@ export type ActivityConfig =
   | FlashCardsConfig
   | SpeakingCardsConfig
   | CompleteSentenceConfig
-  | GroupSortConfig;
+  | GroupSortConfig
+  | HalvingConfig;
 
 // ===== Class Plan / Pacing =====
 
@@ -235,7 +264,7 @@ export interface ClassPlan {
 
 /** Default pacing for a game type when first added to a class plan. */
 export function defaultPacing(gameType: string): ActivityPacingConfig {
-  const perQ = ["quiz", "spin-wheel"];
+  const perQ = ["quiz", "spin-wheel", "halving"];
   return {
     timer_mode: perQ.includes(gameType) ? "per-question" : "overall",
     timer_seconds: perQ.includes(gameType) ? 25 : 90,
