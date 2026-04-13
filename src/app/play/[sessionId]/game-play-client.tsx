@@ -148,22 +148,27 @@ export function GamePlayClient({ sessionId }: Props) {
 
       // Broadcast join event so the teacher monitor + other students
       // see this student immediately without waiting for a poll tick.
-      if (store.studentId && store.studentName) {
+      const sid = store.studentId;
+      const sname = store.studentName;
+      const savatar = store.avatarId;
+      if (sid && sname) {
         // Small delay to ensure the channel subscription is fully established
-        setTimeout(() => {
+        joinTimerId = setTimeout(() => {
           rtm.broadcastEvent({
             type: "game:join",
-            studentId: store.studentId!,
-            studentName: store.studentName!,
-            avatarId: store.avatarId ?? "star",
+            studentId: sid,
+            studentName: sname,
+            avatarId: savatar ?? "star",
           });
         }, 500);
       }
     }
 
+    let joinTimerId: ReturnType<typeof setTimeout> | null = null;
     init();
 
     return () => {
+      if (joinTimerId) clearTimeout(joinTimerId);
       realtimeRef.current?.leave();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
