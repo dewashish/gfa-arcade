@@ -1287,6 +1287,167 @@ const ACTIVITIES = [
       },
     ]),
   },
+
+  // ============== MATHS — MIXED HALVES (shapes + quantities) ==============
+  {
+    title: "✂️ Halves All Around — Shapes & Quantities Mix",
+    subject: "maths",
+    topic: "Recognise a half of a shape and a quantity",
+    description:
+      "Mixed halving activity combining shapes (circle, square, pizza, chocolate) and quantities. Includes tap-to-split, true/false, shape judgement, multi-select, and find-half questions with 2D and 3D visuals.",
+    difficulty: "medium",
+    config: halving([
+      // --- Q1: Find-half — warm up with 8 cookies ---
+      {
+        mode: "find-half",
+        object: "cookie",
+        total: 8,
+        options: [3, 4, 5, 6],
+        correctAnswer: 4,
+        hint: "Count all the cookies, then find half.",
+      },
+      // --- Q2: Shape-half — circle cut vertically (correct!) ---
+      {
+        mode: "shape-half",
+        shape: "circle",
+        pattern: "half-v",
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "This circle has a line down the middle.",
+      },
+      // --- Q3: Tap-to-split — 6 stars ---
+      {
+        mode: "tap-to-split",
+        object: "star",
+        total: 6,
+        correctAnswer: 3,
+        hint: "Split these stars into two equal groups.",
+      },
+      // --- Q4: Shape-half — square cut unevenly (WRONG! 3D) ---
+      {
+        mode: "shape-half",
+        shape: "square",
+        pattern: "uneven-2",
+        perspective3d: true,
+        isCorrectSplit: false,
+        correctAnswer: 0,
+        hint: "Are both pieces the same size?",
+      },
+      // --- Q5: Multi-select — which show half? (2 correct, 2 wrong) ---
+      {
+        mode: "multi-select",
+        prompt: "Which of these show exactly half?",
+        correctAnswer: 2,
+        choices: [
+          { label: "Circle — vertical cut", isCorrect: true, shape: "circle", pattern: "half-v" },
+          { label: "8 dots: 4 and 4", isCorrect: true, objectEmoji: "🔵", objectTotal: 8, objectSplitLeft: 4, objectSplitRight: 4 },
+          { label: "Square — quarter cut", isCorrect: false, shape: "square", pattern: "quarter" },
+          { label: "Pizza — 3 slices", isCorrect: false, shape: "pizza", pattern: "thirds" },
+        ],
+        hint: "Remember: half means 2 EQUAL parts.",
+      },
+      // --- Q6: True-false (objects) — 10 hearts split 5|5 (correct) ---
+      {
+        mode: "true-false",
+        object: "heart",
+        total: 10,
+        leftGroup: 5,
+        rightGroup: 5,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "Count each group carefully.",
+      },
+      // --- Q7: Shape-half — pizza cut horizontally (correct! 3D) ---
+      {
+        mode: "shape-half",
+        shape: "pizza",
+        pattern: "half-h",
+        perspective3d: true,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "This pizza has been cut with one straight line.",
+      },
+      // --- Q8: Find-half — half of 12 ---
+      {
+        mode: "find-half",
+        object: "balloon",
+        total: 12,
+        options: [4, 5, 6, 8],
+        correctAnswer: 6,
+      },
+      // --- Q9: Shape-half — rectangle cut into thirds (WRONG!) ---
+      {
+        mode: "shape-half",
+        shape: "rectangle",
+        pattern: "thirds",
+        isCorrectSplit: false,
+        correctAnswer: 0,
+        hint: "How many pieces are there?",
+      },
+      // --- Q10: Tap-to-split — 10 balloons ---
+      {
+        mode: "tap-to-split",
+        object: "balloon",
+        total: 10,
+        correctAnswer: 5,
+        hint: "Select exactly half the balloons!",
+      },
+      // --- Q11: Multi-select — which show half? (shape + objects mix) ---
+      {
+        mode: "multi-select",
+        prompt: "Pick all the halves!",
+        correctAnswer: 2,
+        choices: [
+          { label: "Chocolate bar — left half", isCorrect: true, shape: "chocolate", pattern: "half-v" },
+          { label: "6 apples: 3 and 3", isCorrect: true, objectEmoji: "🍎", objectTotal: 6, objectSplitLeft: 3, objectSplitRight: 3 },
+          { label: "Circle — quarter", isCorrect: false, shape: "circle", pattern: "quarter" },
+          { label: "10 stars: 3 and 7", isCorrect: false, objectEmoji: "⭐", objectTotal: 10, objectSplitLeft: 3, objectSplitRight: 7 },
+        ],
+      },
+      // --- Q12: Shape-half — chocolate bar horizontal (correct! 3D) ---
+      {
+        mode: "shape-half",
+        shape: "chocolate",
+        pattern: "half-h",
+        perspective3d: true,
+        isCorrectSplit: true,
+        correctAnswer: 1,
+        hint: "The chocolate bar is snapped along one line.",
+      },
+      // --- Q13: Find-half — half of 16 ---
+      {
+        mode: "find-half",
+        object: "star",
+        total: 16,
+        options: [6, 7, 8, 10],
+        correctAnswer: 8,
+      },
+      // --- Q14: True-false (objects) — 14 cookies split 6|8 (WRONG) ---
+      {
+        mode: "true-false",
+        object: "cookie",
+        total: 14,
+        leftGroup: 6,
+        rightGroup: 8,
+        isCorrectSplit: false,
+        correctAnswer: 0,
+        hint: "Are these two groups the same size?",
+      },
+      // --- Q15: Multi-select — hardest! mixed shapes + quantities ---
+      {
+        mode: "multi-select",
+        prompt: "Final challenge! Which show EXACTLY half?",
+        correctAnswer: 2,
+        choices: [
+          { label: "Rectangle — diagonal cut", isCorrect: true, shape: "rectangle", pattern: "half-diag" },
+          { label: "12 hearts: 6 and 6", isCorrect: true, objectEmoji: "❤️", objectTotal: 12, objectSplitLeft: 6, objectSplitRight: 6 },
+          { label: "Pizza — quarter", isCorrect: false, shape: "pizza", pattern: "quarter" },
+          { label: "8 dots: 5 and 3", isCorrect: false, objectEmoji: "🔵", objectTotal: 8, objectSplitLeft: 5, objectSplitRight: 3 },
+        ],
+        hint: "Think carefully — half means exactly 2 equal parts!",
+      },
+    ], 25),
+  },
 ];
 
 // ===== Run =====

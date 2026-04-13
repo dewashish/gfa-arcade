@@ -195,30 +195,63 @@ export type GroupSortConfig = {
   time_limit_seconds?: number;
 };
 
-export type HalvingQuestionMode = "tap-to-split" | "find-half" | "true-false";
+export type HalvingQuestionMode =
+  | "tap-to-split"
+  | "find-half"
+  | "true-false"
+  | "shape-half"
+  | "multi-select";
+
+export type HalvingShapeType = "circle" | "square" | "rectangle" | "pizza" | "chocolate";
+export type HalvingPattern = "whole" | "half-v" | "half-h" | "half-diag" | "quarter" | "uneven-2" | "thirds";
+
+/** A single choice in a multi-select question. */
+export interface HalvingChoice {
+  label: string;
+  isCorrect: boolean;
+  /** Shape visual (rendered as SVG). */
+  shape?: HalvingShapeType;
+  pattern?: HalvingPattern;
+  /** Object split visual (rendered as emoji groups). */
+  objectEmoji?: string;
+  objectTotal?: number;
+  objectSplitLeft?: number;
+  objectSplitRight?: number;
+}
 
 export type HalvingConfig = {
   type: "halving";
   questions: Array<{
     /** Interaction mode for this question. */
     mode: HalvingQuestionMode;
-    /** Which emoji object to render. */
-    object: "apple" | "star" | "cookie" | "balloon" | "heart" | "dot";
-    /** Total number of objects shown. */
-    total: number;
+    /** Which emoji object to render (quantity modes). */
+    object?: "apple" | "star" | "cookie" | "balloon" | "heart" | "dot";
+    /** Total number of objects shown (quantity modes). */
+    total?: number;
     /** For true-false: how many in the left group. */
     leftGroup?: number;
     /** For true-false: how many in the right group. */
     rightGroup?: number;
-    /** For true-false: whether the split is correct (equal halves). */
+    /** For true-false / shape-half: whether the split is correct. */
     isCorrectSplit?: boolean;
     /** For find-half: multiple choice options (numbers). */
     options?: number[];
-    /** The correct answer — half of total (for find-half/tap-to-split),
-     *  or 1 = true / 0 = false (for true-false). */
+    /** The correct answer — half of total (find-half/tap-to-split),
+     *  1 = true / 0 = false (true-false / shape-half),
+     *  or count of correct choices (multi-select). */
     correctAnswer: number;
     /** Hint text shown above the question (optional). */
     hint?: string;
+    /** For shape-half: which shape to render. */
+    shape?: HalvingShapeType;
+    /** For shape-half: which cut pattern to display. */
+    pattern?: HalvingPattern;
+    /** For shape-half: use 3D perspective effect. */
+    perspective3d?: boolean;
+    /** For multi-select: the choices to render. */
+    choices?: HalvingChoice[];
+    /** For multi-select: question prompt. */
+    prompt?: string;
     time_limit_seconds?: number;
   }>;
 };
